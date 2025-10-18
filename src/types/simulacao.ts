@@ -28,9 +28,11 @@ export interface ResultadoSimulacao {
   taxaEfetiva?: number;
   evolucaoMensal: Array<{
     mes: number;
-    valorInvestido: number;
-    valorAcumulado: number;
+    contribuicao: number;
     juros: number;
+    saldoAcumulado: number;
+    valorInvestido?: number;
+    valorAcumulado?: number;
   }>;
 }
 

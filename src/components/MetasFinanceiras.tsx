@@ -30,7 +30,7 @@ import { MetaFinanceira } from '../types/metas';
 import { formatCurrency } from '../utils/formatters';
 import { useMetasFinanceiras } from '../hooks/useMetasFinanceiras';
 import TimelineMetas from './TimelineMetas';
-import { AnimatedContainer, AnimatedItem, StaggeredContainer } from './ui/AnimatedContainer';
+import { AnimatedContainer, AnimatedItem, StaggeredContainer } from './AnimatedContainer';
 
 const MetasFinanceiras = memo(() => {
   const {
@@ -124,7 +124,7 @@ const MetasFinanceiras = memo(() => {
 
       {/* Notificações */}
       {notificacoesMetas.filter(n => !n.lida).length > 0 && (
-        <AnimatedContainer variant="slideDown">
+        <AnimatedContainer variant="slideUp">
           <Card className="border-orange-200 bg-orange-50">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ const MetasFinanceiras = memo(() => {
           </div>
 
           <Dialog open={modalAberto} onOpenChange={setModalAberto}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button onClick={() => setMetaEditando(null)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Meta
@@ -259,7 +259,7 @@ const MetasFinanceiras = memo(() => {
         </StaggeredContainer>
       ) : (
         <AnimatedContainer variant="fadeIn">
-          <TimelineMetas metas={metasFiltradas} />
+          <TimelineMetas />
         </AnimatedContainer>
       )}
 
@@ -447,26 +447,41 @@ const FormularioMeta = memo(({
     nome: meta?.nome || '',
     descricao: meta?.descricao || '',
     valorMeta: meta?.valorMeta || 0,
-    categoria: meta?.categoria || 'outros',
+    categoria: meta?.categoria || 'outro',
     prioridade: meta?.prioridade || 'media',
-    dataLimite: meta?.dataLimite || ''
+    dataLimite: meta?.dataLimite ? (meta.dataLimite instanceof Date ? meta.dataLimite.toISOString().split('T')[0] : meta.dataLimite) : ''
   });
 
   const categorias = [
     { value: 'emergencia', label: 'Emergência' },
     { value: 'aposentadoria', label: 'Aposentadoria' },
     { value: 'casa', label: 'Casa Própria' },
+    { value: 'carro', label: 'Carro' },
     { value: 'viagem', label: 'Viagem' },
     { value: 'educacao', label: 'Educação' },
-    { value: 'investimento', label: 'Investimento' },
-    { value: 'outros', label: 'Outros' }
+    { value: 'outro', label: 'Outro' }
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!dados.nome || dados.valorMeta <= 0) return;
     
-    onSalvar(dados);
+    const dadosCompletos = {
+      ...dados,
+      dataLimite: dados.dataLimite ? new Date(dados.dataLimite) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      valorObjetivo: dados.valorMeta,
+      dataInicio: new Date(),
+      dataObjetivo: dados.dataLimite ? new Date(dados.dataLimite) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      cor: '#3B82F6',
+      notificacoes: {
+        marcos: true,
+        prazo: true,
+        contribuicao: true
+      },
+      historico: []
+    };
+    
+    onSalvar(dadosCompletos);
   };
 
   return (
@@ -516,7 +531,7 @@ const FormularioMeta = memo(({
 
         <div>
           <Label htmlFor="categoria">Categoria</Label>
-          <Select value={dados.categoria} onValueChange={(value) => setDados(prev => ({ ...prev, categoria: value }))}>
+          <Select value={dados.categoria} onValueChange={(value) => setDados(prev => ({ ...prev, categoria: value as any }))}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

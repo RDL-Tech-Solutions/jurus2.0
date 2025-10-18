@@ -130,8 +130,8 @@ export const filtrarSimulacoes = (
         valorB = b.categoria;
         break;
       case 'rendimento':
-        valorA = a.resultado?.saldoFinal || 0;
-        valorB = b.resultado?.saldoFinal || 0;
+        valorA = a.resultado?.valorFinal || 0;
+        valorB = b.resultado?.valorFinal || 0;
         break;
       default:
         return 0;
@@ -180,12 +180,12 @@ export const compararSimulacoes = (
   if (simulacoes.length > 1) {
     const comResultado = simulacoes.filter(s => s.resultado);
     if (comResultado.length > 1) {
-      const saldos = comResultado.map(s => s.resultado!.saldoFinal);
+      const saldos = comResultado.map(s => s.resultado!.valorFinal);
       const maxSaldo = Math.max(...saldos);
       const minSaldo = Math.min(...saldos);
       
-      const melhor = comResultado.find(s => s.resultado!.saldoFinal === maxSaldo);
-      const pior = comResultado.find(s => s.resultado!.saldoFinal === minSaldo);
+      const melhor = comResultado.find(s => s.resultado!.valorFinal === maxSaldo);
+      const pior = comResultado.find(s => s.resultado!.valorFinal === minSaldo);
 
       comparacao.resultadoAnalise = {
         melhorOpcao: melhor?.nome || '',
@@ -211,11 +211,11 @@ export const compararSimulacoes = (
 const calcularPontuacao = (simulacao: SimulacaoFavorita): number => {
   if (!simulacao.resultado) return 0;
   
-  const { saldoFinal, rendimentoTotal } = simulacao.resultado;
-  const { valorInicial, periodo } = simulacao.simulacao;
+  const { valorFinal, totalJuros } = simulacao.resultado;
+  const { valorInicial, periodo } = simulacao.simulacao.parametros;
   
   // Pontuação baseada em rendimento, tempo e valor inicial
-  const rendimentoScore = (rendimentoTotal / valorInicial) * 100;
+  const rendimentoScore = (totalJuros / valorInicial) * 100;
   const tempoScore = Math.max(0, 100 - periodo);
   const valorScore = Math.min(100, valorInicial / 1000);
   
@@ -255,15 +255,15 @@ export const gerarEstatisticas = (
 
   // Médias
   const rendimentoMedio = comResultado.length > 0
-    ? comResultado.reduce((acc, s) => acc + s.resultado!.rendimentoTotal, 0) / comResultado.length
+    ? comResultado.reduce((acc, s) => acc + s.resultado!.totalJuros, 0) / comResultado.length
     : 0;
 
   const periodoMedio = simulacoes.length > 0
-    ? simulacoes.reduce((acc, s) => acc + s.simulacao.periodo, 0) / simulacoes.length
+    ? simulacoes.reduce((acc, s) => acc + s.simulacao.parametros.periodo, 0) / simulacoes.length
     : 0;
 
   const valorMedioInvestido = simulacoes.length > 0
-    ? simulacoes.reduce((acc, s) => acc + s.simulacao.valorInicial, 0) / simulacoes.length
+    ? simulacoes.reduce((acc, s) => acc + s.simulacao.parametros.valorInicial, 0) / simulacoes.length
     : 0;
 
   // Crescimento mensal (últimos 12 meses)
@@ -366,12 +366,12 @@ const exportarCSV = (simulacoes: SimulacaoFavorita[]): string => {
   const linhas = simulacoes.map(s => [
     s.nome,
     s.categoria,
-    s.simulacao.valorInicial,
-    s.simulacao.valorMensal,
-    s.simulacao.periodo,
-    s.simulacao.modalidade?.taxaAnual || 0,
-    s.resultado?.saldoFinal || 0,
-    s.resultado?.rendimentoTotal || 0,
+    s.simulacao.parametros.valorInicial,
+    s.simulacao.parametros.valorMensal || 0,
+    s.simulacao.parametros.periodo,
+    s.simulacao.parametros.taxa || 0,
+    s.resultado?.valorFinal || 0,
+    s.resultado?.totalJuros || 0,
     s.dataCriacao.toLocaleDateString('pt-BR'),
     s.isFavorita ? 'Sim' : 'Não'
   ]);

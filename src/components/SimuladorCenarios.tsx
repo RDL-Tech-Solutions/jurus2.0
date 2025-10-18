@@ -40,6 +40,7 @@ import { useCenarios } from '../hooks/useCenarios';
 import { CenarioEconomico, ParametrosCenario, EventoEconomico } from '../types/cenarios';
 import { AnimatedContainer, StaggeredContainer, AnimatedItem } from './AnimatedContainer';
 import { AnimatedButton } from './AnimatedButton';
+import { formatarMoeda, formatarPercentual } from '../utils/formatters';
 
 const SimuladorCenarios: React.FC = () => {
   const {

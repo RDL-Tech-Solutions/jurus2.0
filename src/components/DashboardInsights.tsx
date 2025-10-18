@@ -145,7 +145,7 @@ export const DashboardInsights: React.FC = () => {
           )}
           
           <Dialog open={modalConfiguracao} onOpenChange={setModalConfiguracao}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button variant="outline">
                 <Settings className="w-4 h-4 mr-2" />
                 Configurações

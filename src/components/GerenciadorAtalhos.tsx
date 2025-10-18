@@ -382,7 +382,6 @@ const GerenciadorAtalhos: React.FC<GerenciadorAtalhosProps> = ({ onFechar }) => 
                             className="hidden"
                           />
                           <AnimatedButton
-                            as="span"
                             variant="outline"
                             className="w-full cursor-pointer"
                             size="sm"
@@ -704,7 +703,7 @@ const EditorAtalho: React.FC<{
         
         <AnimatedButton
           onClick={modoGravacao ? onPararGravacao : onIniciarGravacao}
-          variant={modoGravacao ? "outline" : "default"}
+          variant={modoGravacao ? "outline" : "primary"}
           className={modoGravacao ? "border-red-300 text-red-600" : "bg-blue-600 hover:bg-blue-700 text-white"}
         >
           {modoGravacao ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4" />}

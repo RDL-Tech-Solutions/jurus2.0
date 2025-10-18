@@ -20,7 +20,10 @@ export const analisarPadroes = (historico: HistoricoItem[]): PadraoInvestimento[
   if (historico.length < 3) return padroes;
 
   // Analisar tendência de valor inicial
-  const valoresIniciais = historico.map(item => item.simulacao.valorInicial);
+  const valoresIniciais = historico.map(item => {
+    const simulacao = item.dados as SimulacaoJuros;
+    return simulacao.parametros.valorInicial;
+  });
   const tendenciaValorInicial = calcularTendencia(valoresIniciais);
   
   if (Math.abs(tendenciaValorInicial.variacao) > 5) {
@@ -30,13 +33,16 @@ export const analisarPadroes = (historico: HistoricoItem[]): PadraoInvestimento[
       tendencia: tendenciaValorInicial.variacao > 0 ? 'crescente' : 'decrescente',
       variacao: Math.abs(tendenciaValorInicial.variacao),
       frequencia: historico.length,
-      ultimaOcorrencia: new Date(Math.max(...historico.map(h => h.data.getTime()))),
+      ultimaOcorrencia: new Date(Math.max(...historico.map(h => h.dataCreacao.getTime()))),
       confianca: Math.min(95, tendenciaValorInicial.confianca * 100)
     });
   }
 
   // Analisar tendência de aportes mensais
-  const valoresMensais = historico.map(item => item.simulacao.valorMensal);
+  const valoresMensais = historico.map(item => {
+    const simulacao = item.dados as SimulacaoJuros;
+    return simulacao.parametros.valorMensal || 0;
+  });
   const tendenciaValorMensal = calcularTendencia(valoresMensais);
   
   if (Math.abs(tendenciaValorMensal.variacao) > 10) {
@@ -46,13 +52,16 @@ export const analisarPadroes = (historico: HistoricoItem[]): PadraoInvestimento[
       tendencia: tendenciaValorMensal.variacao > 0 ? 'crescente' : 'decrescente',
       variacao: Math.abs(tendenciaValorMensal.variacao),
       frequencia: historico.length,
-      ultimaOcorrencia: new Date(Math.max(...historico.map(h => h.data.getTime()))),
+      ultimaOcorrencia: new Date(Math.max(...historico.map(h => h.dataCreacao.getTime()))),
       confianca: Math.min(95, tendenciaValorMensal.confianca * 100)
     });
   }
 
   // Analisar tendência de períodos
-  const periodos = historico.map(item => item.simulacao.periodo);
+  const periodos = historico.map(item => {
+    const simulacao = item.dados as SimulacaoJuros;
+    return simulacao.parametros.periodo;
+  });
   const tendenciaPeriodo = calcularTendencia(periodos);
   
   if (Math.abs(tendenciaPeriodo.variacao) > 15) {
@@ -62,7 +71,7 @@ export const analisarPadroes = (historico: HistoricoItem[]): PadraoInvestimento[
       tendencia: tendenciaPeriodo.variacao > 0 ? 'crescente' : 'decrescente',
       variacao: Math.abs(tendenciaPeriodo.variacao),
       frequencia: historico.length,
-      ultimaOcorrencia: new Date(Math.max(...historico.map(h => h.data.getTime()))),
+      ultimaOcorrencia: new Date(Math.max(...historico.map(h => h.dataCreacao.getTime()))),
       confianca: Math.min(95, tendenciaPeriodo.confianca * 100)
     });
   }
@@ -150,15 +159,15 @@ export const gerarSugestoes = (
   }
 
   // Sugestão de extensão de prazo
-  if (simulacao.periodo < 60 && resultado) {
-    const novoPeriodo = Math.min(simulacao.periodo + 24, 120);
+  if (simulacao.parametros.periodo < 60 && resultado) {
+    const novoPeriodo = Math.min(simulacao.parametros.periodo + 24, 120);
     const impactoEstimado = calcularImpactoExtensao(simulacao, novoPeriodo);
     
     sugestoes.push({
       id: 'estender_prazo',
       tipo: 'otimizacao',
       titulo: 'Considere estender o prazo do investimento',
-      descricao: `Estender o prazo de ${simulacao.periodo} para ${novoPeriodo} meses pode gerar ${formatarMoeda(impactoEstimado)} adicional devido aos juros compostos.`,
+      descricao: `Estender o prazo de ${simulacao.parametros.periodo} para ${novoPeriodo} meses pode gerar ${formatarMoeda(impactoEstimado)} adicional devido aos juros compostos.`,
       impacto: 'medio',
       prioridade: 'media',
       categoria: 'Otimização de Prazo',
@@ -253,7 +262,10 @@ export const calcularMetricas = (historico: HistoricoItem[]): MetricaPerformance
   });
 
   // Período médio
-  const periodoMedio = simulacoesComResultado.reduce((sum, h) => sum + h.simulacao.periodo, 0) / simulacoesComResultado.length;
+  const periodoMedio = simulacoesComResultado.reduce((sum, h) => {
+    const simulacao = h.dados as SimulacaoJuros;
+    return sum + simulacao.parametros.periodo;
+  }, 0) / simulacoesComResultado.length;
 
   metricas.push({
     id: 'periodo_medio',
@@ -268,8 +280,10 @@ export const calcularMetricas = (historico: HistoricoItem[]): MetricaPerformance
 
   // Consistência (desvio padrão dos rendimentos)
   const rendimentos = simulacoesComResultado.map(h => {
-    const rendimento = h.resultado!.rendimentoTotal;
-    const investido = h.simulacao.valorInicial + (h.simulacao.valorMensal * h.simulacao.periodo);
+    const simulacao = h.dados as SimulacaoJuros;
+    const resultado = simulacao.resultado!;
+    const rendimento = resultado.totalJuros; // Using totalJuros instead of rendimentoTotal
+    const investido = simulacao.parametros.valorInicial + ((simulacao.parametros.valorMensal || 0) * simulacao.parametros.periodo);
     return (rendimento / investido) * 100;
   });
 
@@ -302,9 +316,10 @@ export const gerarAlertas = (
   const ultimaSimulacao = historico[historico.length - 1];
   
   // Alerta de meta próxima (simulação)
-  if (ultimaSimulacao.resultado) {
+  const simulacao = ultimaSimulacao.dados as SimulacaoJuros;
+  if (simulacao.resultado) {
     const metaSimulada = 100000; // Meta de R$ 100.000
-    const progresso = (ultimaSimulacao.resultado.saldoFinal / metaSimulada) * 100;
+    const progresso = (simulacao.resultado.valorFinal / metaSimulada) * 100;
     
     if (progresso > 80 && progresso < 100) {
       alertas.push({
@@ -323,7 +338,10 @@ export const gerarAlertas = (
   }
 
   // Alerta de baixa diversificação
-  const modalidadesUnicas = new Set(historico.map(h => h.simulacao.modalidade?.nome || 'Padrão'));
+  const modalidadesUnicas = new Set(historico.map(h => {
+    const sim = h.dados as SimulacaoJuros;
+    return sim.tipo || 'Padrão';
+  }));
   if (modalidadesUnicas.size === 1 && historico.length > 5) {
     alertas.push({
       id: 'baixa_diversificacao',
@@ -523,7 +541,7 @@ export const gerarDashboardInsights = (historico: HistoricoItem[]): DashboardIns
 
   const simulacoesComResultado = historico.filter(h => h.dados?.resultado);
   const rendimentoMedioProjetado = simulacoesComResultado.length > 0
-    ? simulacoesComResultado.reduce((sum, h) => sum + h.dados.resultado.saldoFinal, 0) / simulacoesComResultado.length
+    ? simulacoesComResultado.reduce((sum, h) => sum + h.dados.resultado.valorFinal, 0) / simulacoesComResultado.length
     : 0;
 
   return {

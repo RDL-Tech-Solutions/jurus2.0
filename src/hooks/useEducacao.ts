@@ -9,6 +9,7 @@ import {
   ConquistaEducativa,
   PerfilEducativo,
   SessaoEstudo,
+  AtividadeEstudo,
   ConfiguracaoEducacao,
   HistoricoEducacao,
   RecomendacaoEducativa,
@@ -418,9 +419,13 @@ const useEducacao = () => {
   const registrarAtividade = useCallback((atividade: Omit<any, 'id'>) => {
     if (!sessaoAtual) return;
 
-    const novaAtividade = {
-      ...atividade,
-      id: 'atividade-' + Date.now()
+    const novaAtividade: AtividadeEstudo = {
+      tipo: atividade.tipo,
+      id: 'atividade-' + Date.now(),
+      titulo: atividade.titulo,
+      tempoGasto: atividade.tempoGasto,
+      concluida: atividade.concluida,
+      pontuacao: atividade.pontuacao
     };
 
     setSessaoAtual(prev => prev ? {

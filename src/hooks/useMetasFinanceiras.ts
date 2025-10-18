@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { useMetas } from '../store/useAppStore';
 import { MetaFinanceira, ProgressoMeta, NotificacaoMeta } from '../types/metas';
-import { toast } from 'sonner';
+import { useToast } from './useToast';
 
 export const useMetasFinanceiras = () => {
+  const { success: toast } = useToast();
   const {
     metas,
     notificacoesMetas,
@@ -21,11 +22,11 @@ export const useMetasFinanceiras = () => {
   const estatisticas = useMemo(() => {
     const total = metas.length;
     const concluidas = metas.filter(meta => meta.status === 'concluida').length;
-    const emAndamento = metas.filter(meta => meta.status === 'em_andamento').length;
+    const emAndamento = metas.filter(meta => meta.status === 'ativa').length;
     const pausadas = metas.filter(meta => meta.status === 'pausada').length;
     const atrasadas = metas.filter(meta => {
       const hoje = new Date();
-      return meta.status === 'em_andamento' && 
+      return meta.status === 'ativa' && 
              meta.dataLimite && 
              new Date(meta.dataLimite) < hoje &&
              meta.valorAtual < meta.valorMeta;
@@ -71,17 +72,17 @@ export const useMetasFinanceiras = () => {
   }, [metas]);
 
   // Criar nova meta
-  const criarMeta = useCallback((dadosMeta: Omit<MetaFinanceira, 'id' | 'dataCriacao' | 'valorAtual' | 'status'>) => {
+  const criarMeta = useCallback((dadosMeta: Omit<MetaFinanceira, 'id' | 'valorAtual' | 'status' | 'historico'>) => {
     const novaMeta: MetaFinanceira = {
       ...dadosMeta,
       id: crypto.randomUUID(),
-      dataCriacao: new Date().toISOString(),
       valorAtual: 0,
-      status: 'em_andamento'
+      status: 'ativa',
+      historico: []
     };
 
     adicionarMeta(novaMeta);
-    toast.success(`Meta "${novaMeta.nome}" criada com sucesso!`);
+    toast(`Meta "${novaMeta.nome}" criada com sucesso!`);
     
     return novaMeta;
   }, [adicionarMeta]);
@@ -89,7 +90,7 @@ export const useMetasFinanceiras = () => {
   // Atualizar meta existente
   const editarMeta = useCallback((id: string, dadosAtualizados: Partial<MetaFinanceira>) => {
     atualizarMeta(id, dadosAtualizados);
-    toast.success('Meta atualizada com sucesso!');
+    toast('Meta atualizada com sucesso!');
   }, [atualizarMeta]);
 
   // Excluir meta
@@ -97,7 +98,7 @@ export const useMetasFinanceiras = () => {
     const meta = metas.find(m => m.id === id);
     if (meta) {
       removerMeta(id);
-      toast.success(`Meta "${meta.nome}" removida com sucesso!`);
+      toast(`Meta "${meta.nome}" removida com sucesso!`);
     }
   }, [metas, removerMeta]);
 
@@ -111,22 +112,23 @@ export const useMetasFinanceiras = () => {
     const novoValorAtual = meta.valorAtual + valor;
     const progresso = (novoValorAtual / meta.valorMeta) * 100;
     
-    toast.success(`Contribuição de R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} adicionada!`);
+    toast(`Contribuição de R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} adicionada!`);
     
     // Verificar se a meta foi concluída
     if (novoValorAtual >= meta.valorMeta && meta.status !== 'concluida') {
       atualizarMeta(id, { status: 'concluida' });
-      toast.success(`🎉 Parabéns! Meta "${meta.nome}" foi concluída!`);
+      toast(`🎉 Parabéns! Meta "${meta.nome}" foi concluída!`);
       
       // Adicionar notificação de conclusão
       const notificacao: NotificacaoMeta = {
         id: crypto.randomUUID(),
         metaId: id,
-        tipo: 'meta_concluida',
+        tipo: 'concluida',
         titulo: 'Meta Concluída!',
         mensagem: `Parabéns! Você atingiu a meta "${meta.nome}"`,
-        data: new Date().toISOString(),
-        lida: false
+        data: new Date(),
+        lida: false,
+        prioridade: 'alta'
       };
       adicionarNotificacaoMeta(notificacao);
     }
@@ -135,11 +137,12 @@ export const useMetasFinanceiras = () => {
       const notificacao: NotificacaoMeta = {
         id: crypto.randomUUID(),
         metaId: id,
-        tipo: 'marco_atingido',
+        tipo: 'marco',
         titulo: 'Marco Atingido!',
         mensagem: `Você atingiu 25% da meta "${meta.nome}"`,
-        data: new Date().toISOString(),
-        lida: false
+        data: new Date(),
+        lida: false,
+        prioridade: 'baixa'
       };
       adicionarNotificacaoMeta(notificacao);
     }
@@ -147,11 +150,12 @@ export const useMetasFinanceiras = () => {
       const notificacao: NotificacaoMeta = {
         id: crypto.randomUUID(),
         metaId: id,
-        tipo: 'marco_atingido',
+        tipo: 'marco',
         titulo: 'Marco Atingido!',
         mensagem: `Você atingiu 50% da meta "${meta.nome}"`,
-        data: new Date().toISOString(),
-        lida: false
+        data: new Date(),
+        lida: false,
+        prioridade: 'media'
       };
       adicionarNotificacaoMeta(notificacao);
     }
@@ -159,11 +163,12 @@ export const useMetasFinanceiras = () => {
       const notificacao: NotificacaoMeta = {
         id: crypto.randomUUID(),
         metaId: id,
-        tipo: 'marco_atingido',
+        tipo: 'marco',
         titulo: 'Marco Atingido!',
         mensagem: `Você atingiu 75% da meta "${meta.nome}"`,
-        data: new Date().toISOString(),
-        lida: false
+        data: new Date(),
+        lida: false,
+        prioridade: 'media'
       };
       adicionarNotificacaoMeta(notificacao);
     }
@@ -174,11 +179,11 @@ export const useMetasFinanceiras = () => {
     const meta = metas.find(m => m.id === id);
     if (!meta) return;
 
-    const novoStatus = meta.status === 'pausada' ? 'em_andamento' : 'pausada';
+    const novoStatus = meta.status === 'pausada' ? 'ativa' : 'pausada';
     atualizarMeta(id, { status: novoStatus });
     
     const acao = novoStatus === 'pausada' ? 'pausada' : 'retomada';
-    toast.success(`Meta "${meta.nome}" ${acao} com sucesso!`);
+    toast(`Meta "${meta.nome}" ${acao} com sucesso!`);
   }, [metas, atualizarMeta]);
 
   // Calcular tempo restante para meta

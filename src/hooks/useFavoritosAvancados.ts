@@ -11,7 +11,8 @@ import {
   formatarPorcentagem,
   validarSimulacaoFavorita
 } from '../utils/favoritos';
-import { SimulacaoInput, SimulacaoResultado } from '../types';
+import { SimulacaoInput } from '../types';
+import { Simulacao, ResultadoSimulacao } from '../types/simulacao';
 import { SimulacaoFavorita, ComparacaoSimulacoes, Tag } from '../types/favoritos';
 
 export const useFavoritosAvancados = () => {
@@ -86,23 +87,42 @@ export const useFavoritosAvancados = () => {
   const melhoresSimulacoes = useMemo(() => {
     return simulacoesFavoritas
       .filter(sim => sim.resultado)
-      .sort((a, b) => (b.resultado?.saldoFinal || 0) - (a.resultado?.saldoFinal || 0))
+      .sort((a, b) => (b.resultado?.valorFinal || 0) - (a.resultado?.valorFinal || 0))
       .slice(0, 5);
   }, [simulacoesFavoritas]);
 
-  // Função para salvar simulação atual como favorita
+  // Função auxiliar para converter SimulacaoInput para Simulacao
+  const converterSimulacaoInput = (simulacaoInput: SimulacaoInput): Simulacao => {
+    return {
+      id: Date.now().toString(),
+      nome: 'Simulação',
+      tipo: 'juros_compostos',
+      parametros: {
+        valorInicial: simulacaoInput.valorInicial,
+        valorMensal: simulacaoInput.valorMensal,
+        taxa: simulacaoInput.taxaPersonalizada || simulacaoInput.modalidade?.taxaAnual || 0,
+        periodo: simulacaoInput.periodo,
+        tipoTaxa: simulacaoInput.unidadePeriodo === 'anos' ? 'anual' : 'mensal',
+        tipoCalculo: 'juros_compostos'
+      },
+      dataCreacao: new Date()
+    };
+  };
+
+  // Função para salvar como favorita
   const salvarComoFavorita = useCallback((
     nome: string,
     simulacao: SimulacaoInput,
-    resultado?: SimulacaoResultado,
+    resultado?: ResultadoSimulacao,
     opcoes?: Partial<SimulacaoFavorita>
   ) => {
-    const erros = validarSimulacaoFavorita({ nome, simulacao, ...opcoes });
+    const simulacaoConvertida = converterSimulacaoInput(simulacao);
+    const erros = validarSimulacaoFavorita({ nome, simulacao: simulacaoConvertida, ...opcoes });
     if (erros.length > 0) {
       throw new Error(erros.join(', '));
     }
 
-    const simulacaoFavorita = criarSimulacaoFavorita(nome, simulacao, resultado, opcoes);
+    const simulacaoFavorita = criarSimulacaoFavorita(nome, simulacaoConvertida, resultado, opcoes);
     adicionarSimulacaoFavorita(simulacaoFavorita);
     return simulacaoFavorita.id;
   }, [adicionarSimulacaoFavorita]);
@@ -222,7 +242,7 @@ export const useFavoritosAvancados = () => {
     const simulacao = simulacoesFavoritas.find(sim => sim.id === simulacaoId);
     if (!simulacao) return [];
 
-    const { valorInicial, periodo, modalidade } = simulacao.simulacao;
+    const { valorInicial, periodo } = simulacao.simulacao.parametros;
     
     return simulacoesFavoritas
       .filter(sim => sim.id !== simulacaoId)
@@ -230,17 +250,17 @@ export const useFavoritosAvancados = () => {
         let pontuacao = 0;
         
         // Similaridade por valor inicial (±20%)
-        const diffValor = Math.abs(sim.simulacao.valorInicial - valorInicial) / valorInicial;
+        const diffValor = Math.abs(sim.simulacao.parametros.valorInicial - valorInicial) / valorInicial;
         if (diffValor <= 0.2) pontuacao += 3;
         else if (diffValor <= 0.5) pontuacao += 1;
         
         // Similaridade por período (±6 meses)
-        const diffPeriodo = Math.abs(sim.simulacao.periodo - periodo);
+        const diffPeriodo = Math.abs(sim.simulacao.parametros.periodo - periodo);
         if (diffPeriodo <= 6) pontuacao += 2;
         else if (diffPeriodo <= 12) pontuacao += 1;
         
-        // Mesma modalidade
-        if (sim.simulacao.modalidade?.id === modalidade?.id) pontuacao += 2;
+        // Mesmo tipo de simulação
+        if (sim.simulacao.tipo === simulacao.simulacao.tipo) pontuacao += 2;
         
         // Mesma categoria
         if (sim.categoria === simulacao.categoria) pontuacao += 1;

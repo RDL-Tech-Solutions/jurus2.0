@@ -45,7 +45,8 @@ export interface ResultadoMensal {
 export interface ResultadoSimulacao {
   totalInvestido: number;
   totalJuros: number;
-  saldoFinal: number;
+  valorFinal: number;
+  saldoFinal?: number; // Mantido para compatibilidade
   ganhoDiario: number;
   ganhoMensal: number;
   ganhoAnual: number;

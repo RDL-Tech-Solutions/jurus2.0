@@ -125,7 +125,15 @@ const FuncionalidadesPremium: React.FC<FuncionalidadesPremiumProps> = ({ classNa
         titulo: 'Relatório de Investimentos',
         periodo: { inicio: new Date(), fim: new Date() },
         dados: {},
-        configuracao: {}
+        configuracao: {},
+        simulacao: {},
+        resultado: {},
+        metadados: {
+          dataGeracao: new Date(),
+          versao: '1.0.0',
+          usuario: 'usuário',
+          configuracoes: {}
+        }
       };
 
       await gerarRelatorio(dados, template);
@@ -526,7 +534,7 @@ const FuncionalidadesPremium: React.FC<FuncionalidadesPremiumProps> = ({ classNa
                 <div>
                   <p className="text-gray-600">Risco</p>
                   <p className={`font-medium ${
-                    resultado.analiseRisco.classificacaoRisco === 'baixo' ? 'text-green-600' :
+                    resultado.analiseRisco.classificacaoRisco === 'conservador' ? 'text-green-600' :
                     resultado.analiseRisco.classificacaoRisco === 'moderado' ? 'text-yellow-600' :
                     'text-red-600'
                   }`}>

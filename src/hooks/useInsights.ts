@@ -9,6 +9,7 @@ import {
   ConquistaInsights,
   PontuacaoUsuario
 } from '../types/insights';
+import { HistoricoItem } from '../types/historico';
 import {
   gerarDashboardInsights,
   verificarConquistas,
@@ -19,6 +20,22 @@ import {
 
 export const useInsights = () => {
   const { historico } = useHistorico();
+  
+  // Converter formato do histórico do store para o formato esperado pelos insights
+  const historicoFormatado = useMemo((): HistoricoItem[] => {
+    return historico.map(item => ({
+      id: item.id,
+      tipo: 'simulacao' as const,
+      titulo: `Simulação ${new Date(item.data).toLocaleDateString()}`,
+      descricao: `Simulação de ${item.simulacao.modalidade?.nome || 'investimento'}`,
+      dados: {
+        simulacao: item.simulacao,
+        resultado: item.resultado
+      },
+      dataCreacao: item.data,
+      dataAtualizacao: item.data
+    }));
+  }, [historico]);
   
   // Estados locais
   const [insights, setInsights] = useState<DashboardInsights | null>(null);
@@ -45,7 +62,7 @@ export const useInsights = () => {
   // Gerar insights automaticamente quando o histórico muda
   useEffect(() => {
     const gerarInsights = async () => {
-      if (historico.length === 0) {
+      if (historicoFormatado.length === 0) {
         setInsights(null);
         return;
       }
@@ -56,18 +73,18 @@ export const useInsights = () => {
         // Simular um pequeno delay para mostrar loading
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        const novosInsights = gerarDashboardInsights(historico);
+        const novosInsights = gerarDashboardInsights(historicoFormatado);
         setInsights(novosInsights);
         setUltimaAtualizacao(new Date());
         
         // Verificar novas conquistas
-        const novasConquistas = verificarConquistas(historico, conquistasDesbloqueadas);
+        const novasConquistas = verificarConquistas(historicoFormatado, conquistasDesbloqueadas);
         if (novasConquistas.length > 0) {
           setConquistasDesbloqueadas(prev => [...prev, ...novasConquistas]);
         }
         
         // Atualizar pontuação
-        const novaPontuacao = calcularPontuacaoUsuario(historico, [...conquistasDesbloqueadas, ...novasConquistas]);
+        const novaPontuacao = calcularPontuacaoUsuario(historicoFormatado, [...conquistasDesbloqueadas, ...novasConquistas]);
         setPontuacaoUsuario(novaPontuacao);
         
       } catch (error) {
@@ -78,7 +95,7 @@ export const useInsights = () => {
     };
 
     gerarInsights();
-  }, [historico, conquistasDesbloqueadas]);
+  }, [historicoFormatado, conquistasDesbloqueadas]);
 
   // Filtrar sugestões baseado na configuração
   const sugestoesFiltradas = useMemo(() => {
@@ -182,12 +199,12 @@ export const useInsights = () => {
   }, []);
 
   const forcarAtualizacao = useCallback(async () => {
-    if (historico.length === 0) return;
+    if (historicoFormatado.length === 0) return;
     
     setIsLoading(true);
     
     try {
-      const novosInsights = gerarDashboardInsights(historico);
+      const novosInsights = gerarDashboardInsights(historicoFormatado);
       setInsights(novosInsights);
       setUltimaAtualizacao(new Date());
     } catch (error) {
@@ -195,7 +212,7 @@ export const useInsights = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [historico]);
+  }, [historicoFormatado]);
 
   // Obter sugestões por categoria
   const obterSugestoesPorCategoria = useCallback((categoria: string) => {

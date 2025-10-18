@@ -222,7 +222,7 @@ const useAcessibilidade = () => {
     setPerfilAtivo(perfilSalvo);
 
     // Detectar preferências do sistema
-    detectarPreferenciasSistema();
+    detectarPreferenciasSystem();
 
     // Inicializar APIs de acessibilidade
     inicializarAPIs();

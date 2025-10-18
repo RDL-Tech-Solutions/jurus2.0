@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { MetaFinanceira } from '../types/metas';
 import { formatCurrency } from '../utils/formatters';
+import { useMetasFinanceiras } from '../hooks/useMetasFinanceiras';
+import { AnimatedContainer, AnimatedItem } from './AnimatedContainer';
 
 interface TimelineMetasProps {
   className?: string;
@@ -32,7 +34,7 @@ interface EventoTimeline {
 }
 
 const TimelineMetas: React.FC<TimelineMetasProps> = ({ className = '' }) => {
-  const { metas, calcularProgressoMeta } = useMetas();
+  const { metas, calcularProgressoMeta } = useMetasFinanceiras();
 
   // Gerar eventos da timeline
   const eventos = useMemo(() => {

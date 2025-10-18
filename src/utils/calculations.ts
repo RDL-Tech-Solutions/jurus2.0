@@ -136,7 +136,7 @@ export function calcularJurosCompostos(input: SimulacaoInput): ResultadoSimulaca
   return {
     totalInvestido,
     totalJuros,
-    saldoFinal,
+    valorFinal: saldoFinal,
     ganhoDiario,
     ganhoMensal,
     ganhoAnual,

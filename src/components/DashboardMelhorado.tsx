@@ -490,7 +490,7 @@ const DashboardMelhorado: React.FC<DashboardMelhoradoProps> = ({
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Dashboard de Performance Avançado
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             Última atualização: {dashboard.ultimaAtualizacao.toLocaleTimeString('pt-BR')}
             {tempoReal && (
               <span className="ml-2 inline-flex items-center gap-1 text-green-600">
@@ -498,7 +498,7 @@ const DashboardMelhorado: React.FC<DashboardMelhoradoProps> = ({
                 Tempo real
               </span>
             )}
-          </p>
+          </div>
         </div>
         
         <div className="flex items-center gap-2">

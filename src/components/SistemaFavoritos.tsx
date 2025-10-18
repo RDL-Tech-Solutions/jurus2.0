@@ -1,33 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Input,
-  Label,
-  Badge,
-  Progress,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  Textarea,
-  Switch,
-  Separator
-} from '../ui';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Textarea } from './ui/textarea';
+import { Switch } from './ui/switch';
+import { Separator } from './ui/separator';
 import {
   Heart,
   Star,
@@ -323,7 +307,7 @@ export const SistemaFavoritos: React.FC = () => {
             <div className="flex gap-2">
               {/* Salvar simulação atual */}
               <Dialog open={modalSalvar} onOpenChange={setModalSalvar}>
-                <DialogTrigger asChild>
+                <DialogTrigger>
                   <Button variant="outline" size="sm">
                     <BookmarkPlus className="w-4 h-4 mr-1" />
                     Salvar Atual
@@ -404,7 +388,7 @@ export const SistemaFavoritos: React.FC = () => {
 
               {/* Exportar */}
               <Dialog open={modalExportar} onOpenChange={setModalExportar}>
-                <DialogTrigger asChild>
+                <DialogTrigger>
                   <Button variant="outline" size="sm">
                     <Download className="w-4 h-4 mr-1" />
                     Exportar
@@ -443,7 +427,7 @@ export const SistemaFavoritos: React.FC = () => {
               </span>
               <div className="flex gap-2">
                 <Dialog open={modalComparacao} onOpenChange={setModalComparacao}>
-                  <DialogTrigger asChild>
+                  <DialogTrigger>
                     <Button size="sm" disabled={simulacoesSelecionadas.length < 2}>
                       <GitCompare className="w-4 h-4 mr-1" />
                       Comparar
@@ -571,7 +555,7 @@ export const SistemaFavoritos: React.FC = () => {
                           <div key={sim.id} className="flex items-center justify-between text-sm">
                             <span>{sim.nome}</span>
                             <span className="font-medium">
-                              {sim.resultado ? formatarMoeda(sim.resultado.saldoFinal) : 'Sem resultado'}
+                              {sim.resultado ? formatarMoeda(sim.resultado.valorFinal) : 'Sem resultado'}
                             </span>
                           </div>
                         ))}
@@ -594,7 +578,7 @@ export const SistemaFavoritos: React.FC = () => {
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Gerenciar Tags</h3>
               <Dialog open={modalTag} onOpenChange={setModalTag}>
-                <DialogTrigger asChild>
+                <DialogTrigger>
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
                     Nova Tag
@@ -828,24 +812,24 @@ const SimulacaoCard: React.FC<SimulacaoCardProps> = ({
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-xs text-gray-500">Valor Inicial</p>
-              <p className="font-semibold">{formatarMoeda(simulacao.simulacao.valorInicial)}</p>
+              <p className="font-semibold">{formatarMoeda(simulacao.simulacao.parametros.valorInicial)}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Período</p>
-              <p className="font-semibold">{simulacao.simulacao.periodo} meses</p>
+              <p className="font-semibold">{simulacao.simulacao.parametros.periodo} meses</p>
             </div>
             {simulacao.resultado && (
               <>
                 <div>
                   <p className="text-xs text-gray-500">Saldo Final</p>
                   <p className="font-semibold text-green-600">
-                    {formatarMoeda(simulacao.resultado.saldoFinal)}
+                    {formatarMoeda(simulacao.resultado.valorFinal)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Rendimento</p>
                   <p className="font-semibold text-blue-600">
-                    {formatarMoeda(simulacao.resultado.rendimentoTotal)}
+                    {formatarMoeda(simulacao.resultado.totalJuros)}
                   </p>
                 </div>
               </>

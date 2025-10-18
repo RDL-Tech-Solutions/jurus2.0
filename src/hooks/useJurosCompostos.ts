@@ -13,7 +13,7 @@ export function useJurosCompostos(input: SimulacaoInput): ResultadoSimulacao & {
       return {
         totalInvestido: 0,
         totalJuros: 0,
-        saldoFinal: 0,
+        valorFinal: 0,
         ganhoDiario: 0,
         ganhoMensal: 0,
         ganhoAnual: 0,
@@ -34,7 +34,7 @@ export function useJurosCompostos(input: SimulacaoInput): ResultadoSimulacao & {
       return {
         totalInvestido: input.valorInicial,
         totalJuros: 0,
-        saldoFinal: input.valorInicial,
+        valorFinal: input.valorInicial,
         ganhoDiario: 0,
         ganhoMensal: 0,
         ganhoAnual: 0,

@@ -18,7 +18,6 @@ import {
   PieChart,
   Info,
   Save,
-  GitCompare,
   Download
 } from 'lucide-react';
 import { useImpostoRenda } from '../store/useAppStore';
@@ -520,7 +519,7 @@ const CalculadoraImpostoRenda: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
-                <GitCompare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Funcionalidade em desenvolvimento</p>
               </div>
             </CardContent>
