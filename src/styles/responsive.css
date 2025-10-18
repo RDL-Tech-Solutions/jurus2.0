@@ -1,0 +1,394 @@
+/* Responsividade Otimizada para Tablets e Dispositivos Intermediários */
+
+/* Breakpoints customizados */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Layout principal para tablets */
+  .tablet-layout {
+    padding: 1rem;
+  }
+
+  /* Grid responsivo para tablets */
+  .tablet-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .tablet-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Formulários em tablets */
+  .form-tablet {
+    max-width: 100%;
+  }
+
+  .form-tablet .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-tablet input,
+  .form-tablet select,
+  .form-tablet textarea {
+    font-size: 16px; /* Previne zoom no iOS */
+    padding: 0.875rem;
+  }
+
+  /* Cards em tablets */
+  .card-tablet {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Navegação em tablets */
+  .nav-tablet {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .nav-tablet .nav-item {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* Gráficos em tablets */
+  .chart-tablet {
+    height: 300px;
+    width: 100%;
+  }
+
+  /* Tabelas em tablets */
+  .table-tablet {
+    font-size: 0.875rem;
+  }
+
+  .table-tablet th,
+  .table-tablet td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Botões em tablets */
+  .btn-tablet {
+    min-height: 44px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  /* Modal em tablets */
+  .modal-tablet {
+    margin: 2rem;
+    max-height: calc(100vh - 4rem);
+  }
+
+  /* Header em tablets */
+  .header-tablet {
+    padding: 1rem;
+  }
+
+  .header-tablet .logo {
+    font-size: 1.25rem;
+  }
+
+  .header-tablet .actions {
+    gap: 0.75rem;
+  }
+}
+
+/* Tablets em modo paisagem */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .landscape-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    height: calc(100vh - 8rem);
+  }
+
+  .landscape-sidebar {
+    overflow-y: auto;
+  }
+
+  .landscape-main {
+    overflow-y: auto;
+  }
+
+  /* Formulário em paisagem */
+  .form-landscape {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-landscape .form-group-full {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Tablets em modo retrato */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .portrait-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .portrait-section {
+    flex: 1;
+  }
+
+  /* Navegação em retrato */
+  .nav-portrait {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .nav-portrait .nav-item {
+    padding: 1rem 0.5rem;
+    text-align: center;
+  }
+}
+
+/* Otimizações específicas para iPad */
+@media (min-width: 768px) and (max-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
+  /* Touch targets maiores */
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Scroll suave */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Zoom desabilitado em inputs */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Melhorias para dispositivos touch intermediários */
+@media (min-width: 768px) and (max-width: 1024px) and (pointer: coarse) {
+  /* Espaçamento maior entre elementos clicáveis */
+  .touch-spacing > * + * {
+    margin-top: 0.75rem;
+  }
+
+  /* Botões maiores */
+  .btn-touch {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+  }
+
+  /* Hover states adaptados para touch */
+  .hover-touch:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+}
+
+/* Layout flexível para tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .flex-tablet {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .flex-tablet-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .flex-tablet-item {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  /* Sidebar responsiva */
+  .sidebar-tablet {
+    width: 100%;
+    position: static;
+    transform: none;
+  }
+
+  /* Content area ajustada */
+  .content-tablet {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* Grid de cards responsivo */
+  .cards-grid-tablet {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Formulário de duas colunas */
+  .form-two-col-tablet {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-two-col-tablet .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Otimizações para performance em tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Reduzir animações complexas */
+  .reduce-animations * {
+    animation-duration: 0.3s !important;
+    transition-duration: 0.3s !important;
+  }
+
+  /* Otimizar imagens */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Lazy loading para elementos pesados */
+  .lazy-load {
+    content-visibility: auto;
+    contain-intrinsic-size: 200px;
+  }
+}
+
+/* Melhorias de tipografia para tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .text-tablet-sm {
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .text-tablet-base {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .text-tablet-lg {
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+
+  .text-tablet-xl {
+    font-size: 1.25rem;
+    line-height: 1.6;
+  }
+
+  /* Headings responsivos */
+  .heading-tablet-1 {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+
+  .heading-tablet-2 {
+    font-size: 1.75rem;
+    line-height: 1.3;
+  }
+
+  .heading-tablet-3 {
+    font-size: 1.5rem;
+    line-height: 1.4;
+  }
+}
+
+/* Estados de foco melhorados para tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .focus-tablet:focus {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Indicadores visuais para elementos interativos */
+  .interactive-tablet {
+    position: relative;
+  }
+
+  .interactive-tablet::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border: 2px solid transparent;
+    border-radius: inherit;
+    transition: border-color 0.2s ease;
+  }
+
+  .interactive-tablet:hover::after,
+  .interactive-tablet:focus::after {
+    border-color: #3b82f6;
+  }
+}
+
+/* Utilitários específicos para tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tablet-hidden {
+    display: none !important;
+  }
+
+  .tablet-block {
+    display: block !important;
+  }
+
+  .tablet-flex {
+    display: flex !important;
+  }
+
+  .tablet-grid {
+    display: grid !important;
+  }
+
+  .tablet-w-full {
+    width: 100% !important;
+  }
+
+  .tablet-w-1-2 {
+    width: 50% !important;
+  }
+
+  .tablet-w-1-3 {
+    width: 33.333333% !important;
+  }
+
+  .tablet-w-2-3 {
+    width: 66.666667% !important;
+  }
+
+  .tablet-p-4 {
+    padding: 1rem !important;
+  }
+
+  .tablet-p-6 {
+    padding: 1.5rem !important;
+  }
+
+  .tablet-m-4 {
+    margin: 1rem !important;
+  }
+
+  .tablet-m-6 {
+    margin: 1.5rem !important;
+  }
+
+  .tablet-text-center {
+    text-align: center !important;
+  }
+
+  .tablet-text-left {
+    text-align: left !important;
+  }
+}

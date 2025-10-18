@@ -1,0 +1,315 @@
+/* Estilos de Acessibilidade */
+
+/* Alto Contraste */
+.high-contrast {
+  --tw-bg-opacity: 1;
+  --tw-text-opacity: 1;
+}
+
+.high-contrast * {
+  border-color: #000 !important;
+}
+
+.high-contrast .bg-white {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.high-contrast .bg-gray-50,
+.high-contrast .bg-gray-100,
+.high-contrast .bg-gray-200 {
+  background-color: #f0f0f0 !important;
+  color: #000000 !important;
+}
+
+.high-contrast .bg-gray-800,
+.high-contrast .bg-gray-900 {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.high-contrast .text-gray-500,
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-700 {
+  color: #000000 !important;
+}
+
+.high-contrast .text-gray-300,
+.high-contrast .text-gray-400 {
+  color: #ffffff !important;
+}
+
+.high-contrast button,
+.high-contrast input,
+.high-contrast select,
+.high-contrast textarea {
+  border: 2px solid #000000 !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.high-contrast button:hover,
+.high-contrast button:focus {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Texto Grande */
+.large-text {
+  font-size: 1.125rem !important;
+}
+
+.large-text h1 {
+  font-size: 2.5rem !important;
+}
+
+.large-text h2 {
+  font-size: 2rem !important;
+}
+
+.large-text h3 {
+  font-size: 1.75rem !important;
+}
+
+.large-text h4 {
+  font-size: 1.5rem !important;
+}
+
+.large-text .text-sm {
+  font-size: 1rem !important;
+}
+
+.large-text .text-xs {
+  font-size: 0.875rem !important;
+}
+
+/* Movimento Reduzido */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Indicadores de Foco Melhorados */
+.enhanced-focus *:focus {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+}
+
+.enhanced-focus button:focus,
+.enhanced-focus input:focus,
+.enhanced-focus select:focus,
+.enhanced-focus textarea:focus,
+.enhanced-focus [tabindex]:focus {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Skip Links */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  font-weight: bold;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Melhor contraste para links */
+.enhanced-focus a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 2px !important;
+}
+
+.enhanced-focus a:hover,
+.enhanced-focus a:focus {
+  text-decoration-thickness: 3px !important;
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+}
+
+/* Melhor visibilidade para elementos interativos */
+.enhanced-focus button,
+.enhanced-focus input,
+.enhanced-focus select,
+.enhanced-focus textarea {
+  border: 2px solid transparent !important;
+}
+
+.enhanced-focus button:hover,
+.enhanced-focus input:hover,
+.enhanced-focus select:hover,
+.enhanced-focus textarea:hover {
+  border-color: #3b82f6 !important;
+}
+
+/* Indicadores visuais para elementos desabilitados */
+.enhanced-focus button:disabled,
+.enhanced-focus input:disabled,
+.enhanced-focus select:disabled,
+.enhanced-focus textarea:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  border-color: #9ca3af !important;
+}
+
+/* Melhor contraste para placeholders */
+.enhanced-focus input::placeholder,
+.enhanced-focus textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* Indicadores de estado para checkboxes e radio buttons */
+.enhanced-focus input[type="checkbox"]:checked,
+.enhanced-focus input[type="radio"]:checked {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Melhor visibilidade para tooltips */
+.enhanced-focus [role="tooltip"] {
+  background-color: #000 !important;
+  color: #fff !important;
+  border: 2px solid #3b82f6 !important;
+  font-weight: bold !important;
+}
+
+/* Animações respeitando preferências do usuário */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Alto contraste respeitando preferências do usuário */
+@media (prefers-contrast: high) {
+  * {
+    border-color: currentColor !important;
+  }
+  
+  button,
+  input,
+  select,
+  textarea {
+    border-width: 2px !important;
+  }
+}
+
+/* Modo escuro com melhor contraste */
+@media (prefers-color-scheme: dark) {
+  .high-contrast .bg-white {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+  
+  .high-contrast .bg-gray-50,
+  .high-contrast .bg-gray-100,
+  .high-contrast .bg-gray-200 {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+  }
+  
+  .high-contrast button,
+  .high-contrast input,
+  .high-contrast select,
+  .high-contrast textarea {
+    border-color: #ffffff !important;
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+  
+  .high-contrast button:hover,
+  .high-contrast button:focus {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
+/* Estilos para navegação por teclado */
+.keyboard-navigation {
+  outline: none;
+}
+
+.keyboard-navigation:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Melhor espaçamento para touch targets */
+@media (pointer: coarse) {
+  button,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  [tabindex] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+}
+
+/* Indicadores de carregamento acessíveis */
+.loading-indicator {
+  position: relative;
+}
+
+.loading-indicator::after {
+  content: "Carregando...";
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Melhor contraste para sombras */
+.enhanced-focus .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.enhanced-focus .shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2) !important;
+}
+
+.enhanced-focus .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.enhanced-focus .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+}

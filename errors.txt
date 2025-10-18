@@ -1,0 +1,153 @@
+
+> jurus@0.0.0 check
+> tsc -b --noEmit
+
+src/components/DashboardInsights.tsx(148,28): error TS2322: Type '{ children: Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & DialogTriggerProps & RefAttributes<HTMLDivElement>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & DialogTriggerProps & RefAttributes<HTMLDivElement>'.
+src/components/FuncionalidadesPremium.tsx(131,28): error TS2345: Argument of type '{ titulo: string; periodo: { inicio: Date; fim: Date; }; dados: {}; configuracao: {}; }' is not assignable to parameter of type 'DadosRelatorio'.
+  Type '{ titulo: string; periodo: { inicio: Date; fim: Date; }; dados: {}; configuracao: {}; }' is missing the following properties from type 'DadosRelatorio': simulacao, resultado, metadados
+src/components/FuncionalidadesPremium.tsx(529,21): error TS2367: This comparison appears to be unintentional because the types '"conservador" | "moderado" | "agressivo"' and '"baixo"' have no overlap.
+src/components/GerenciadorAtalhos.tsx(385,29): error TS2322: Type '{ children: (string | Element)[]; as: string; variant: "outline"; className: string; size: "sm"; }' is not assignable to type 'IntrinsicAttributes & AnimatedButtonProps'.
+  Property 'as' does not exist on type 'IntrinsicAttributes & AnimatedButtonProps'.
+src/components/GerenciadorAtalhos.tsx(707,11): error TS2322: Type '"outline" | "default"' is not assignable to type '"outline" | "primary" | "secondary" | "ghost" | "danger" | "gradient"'.
+  Type '"default"' is not assignable to type '"outline" | "primary" | "secondary" | "ghost" | "danger" | "gradient"'.
+src/components/MetasFinanceiras.tsx(33,69): error TS2307: Cannot find module './ui/AnimatedContainer' or its corresponding type declarations.
+src/components/MetasFinanceiras.tsx(212,28): error TS2322: Type '{ children: Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & DialogTriggerProps & RefAttributes<HTMLDivElement>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & DialogTriggerProps & RefAttributes<HTMLDivElement>'.
+src/components/MetasFinanceiras.tsx(262,26): error TS2322: Type '{ metas: MetaFinanceira[]; }' is not assignable to type 'IntrinsicAttributes & TimelineMetasProps'.
+  Property 'metas' does not exist on type 'IntrinsicAttributes & TimelineMetasProps'.
+src/components/MetasFinanceiras.tsx(469,14): error TS2345: Argument of type '{ nome: string; descricao: string; valorMeta: number; categoria: string; prioridade: "media" | "baixa" | "alta"; dataLimite: string | Date; }' is not assignable to parameter of type 'Omit<MetaFinanceira, "id" | "status" | "valorAtual" | "dataCriacao">'.
+  Type '{ nome: string; descricao: string; valorMeta: number; categoria: string; prioridade: "media" | "baixa" | "alta"; dataLimite: string | Date; }' is missing the following properties from type 'Omit<MetaFinanceira, "id" | "status" | "valorAtual" | "dataCriacao">': notificacoes, valorObjetivo, dataInicio, dataObjetivo, and 2 more.
+src/components/MetasFinanceiras.tsx(552,13): error TS2322: Type 'string | Date' is not assignable to type 'string | number | readonly string[]'.
+  Type 'Date' is not assignable to type 'string | number | readonly string[]'.
+    Type 'Date' is missing the following properties from type 'readonly string[]': length, concat, join, slice, and 20 more.
+src/components/SimuladorCenarios.tsx(729,12): error TS2304: Cannot find name 'formatarMoeda'.
+src/components/SimuladorCenarios.tsx(734,12): error TS2304: Cannot find name 'formatarPercentual'.
+src/components/SimuladorCenarios.tsx(742,37): error TS2304: Cannot find name 'formatarPercentual'.
+src/components/SimuladorCenarios.tsx(750,50): error TS2304: Cannot find name 'formatarPercentual'.
+src/components/SimuladorCenarios.tsx(799,13): error TS2304: Cannot find name 'formatarMoeda'.
+src/components/SimuladorCenarios.tsx(814,37): error TS2304: Cannot find name 'formatarPercentual'.
+src/components/SistemaFavoritos.tsx(30,8): error TS2307: Cannot find module '../ui' or its corresponding type declarations.
+src/components/SistemaFavoritos.tsx(574,76): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/components/SistemaFavoritos.tsx(831,79): error TS2339: Property 'valorInicial' does not exist on type 'Simulacao'.
+src/components/SistemaFavoritos.tsx(835,65): error TS2339: Property 'periodo' does not exist on type 'Simulacao'.
+src/components/SistemaFavoritos.tsx(842,56): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/components/SistemaFavoritos.tsx(848,56): error TS2339: Property 'rendimentoTotal' does not exist on type 'ResultadoSimulacao'.
+src/components/SistemaTemas.tsx(34,3): error TS2305: Module '"lucide-react"' has no exported member 'ColorWheelIcon'.
+src/components/SistemaTemas.tsx(36,3): error TS2305: Module '"lucide-react"' has no exported member 'Eyedropper'.
+src/components/SistemaTemas.tsx(572,33): error TS2304: Cannot find name 'EyeOff'.
+src/components/TimelineMetas.tsx(35,44): error TS2304: Cannot find name 'useMetas'.
+src/components/TimelineMetas.tsx(205,8): error TS2304: Cannot find name 'AnimatedContainer'.
+src/components/TimelineMetas.tsx(251,9): error TS2304: Cannot find name 'AnimatedContainer'.
+src/components/TimelineMetas.tsx(254,8): error TS2304: Cannot find name 'AnimatedContainer'.
+src/components/TimelineMetas.tsx(261,16): error TS2304: Cannot find name 'AnimatedItem'.
+src/components/TimelineMetas.tsx(328,17): error TS2304: Cannot find name 'AnimatedItem'.
+src/components/TimelineMetas.tsx(349,9): error TS2304: Cannot find name 'AnimatedContainer'.
+src/hooks/useAcessibilidade.ts(225,5): error TS2304: Cannot find name 'detectarPreferenciasSistema'.
+src/hooks/useEducacao.ts(426,20): error TS2345: Argument of type '(prev: SessaoEstudo) => { atividades: { id: string; }[]; experienciaGanha: any; pontuacaoGanha: any; id: string; inicio: number; fim?: number; conquistasDesbloqueadas: string[]; }' is not assignable to parameter of type 'SetStateAction<SessaoEstudo>'.
+  Type '(prev: SessaoEstudo) => { atividades: { id: string; }[]; experienciaGanha: any; pontuacaoGanha: any; id: string; inicio: number; fim?: number; conquistasDesbloqueadas: string[]; }' is not assignable to type '(prevState: SessaoEstudo) => SessaoEstudo'.
+    Call signature return types '{ atividades: { id: string; }[]; experienciaGanha: any; pontuacaoGanha: any; id: string; inicio: number; fim?: number; conquistasDesbloqueadas: string[]; }' and 'SessaoEstudo' are incompatible.
+      The types of 'atividades' are incompatible between these types.
+        Type '{ id: string; }[]' is not assignable to type 'AtividadeEstudo[]'.
+          Type '{ id: string; }' is missing the following properties from type 'AtividadeEstudo': tipo, titulo, tempoGasto, concluida
+src/hooks/useFavoritosAvancados.ts(89,37): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/hooks/useFavoritosAvancados.ts(89,70): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/hooks/useFavoritosAvancados.ts(100,52): error TS2322: Type 'SimulacaoInput | Simulacao' is not assignable to type 'Simulacao'.
+  Type 'SimulacaoInput' is missing the following properties from type 'Simulacao': id, nome, tipo, parametros, dataCreacao
+src/hooks/useFavoritosAvancados.ts(105,60): error TS2345: Argument of type 'SimulacaoInput' is not assignable to parameter of type 'Simulacao'.
+  Type 'SimulacaoInput' is missing the following properties from type 'Simulacao': id, nome, tipo, parametros, dataCreacao
+src/hooks/useFavoritosAvancados.ts(225,13): error TS2339: Property 'valorInicial' does not exist on type 'Simulacao'.
+src/hooks/useFavoritosAvancados.ts(225,27): error TS2339: Property 'periodo' does not exist on type 'Simulacao'.
+src/hooks/useFavoritosAvancados.ts(225,36): error TS2339: Property 'modalidade' does not exist on type 'Simulacao'.
+src/hooks/useFavoritosAvancados.ts(233,50): error TS2339: Property 'valorInicial' does not exist on type 'Simulacao'.
+src/hooks/useFavoritosAvancados.ts(238,52): error TS2339: Property 'periodo' does not exist on type 'Simulacao'.
+src/hooks/useFavoritosAvancados.ts(243,27): error TS2339: Property 'modalidade' does not exist on type 'Simulacao'.
+src/hooks/useInsights.ts(59,54): error TS2345: Argument of type '{ id: string; data: Date; simulacao: SimulacaoInput; resultado: ResultadoSimulacao; }[]' is not assignable to parameter of type 'HistoricoItem[]'.
+  Type '{ id: string; data: Date; simulacao: SimulacaoInput; resultado: ResultadoSimulacao; }' is missing the following properties from type 'HistoricoItem': tipo, titulo, dados, dataCreacao
+src/hooks/useInsights.ts(64,53): error TS2345: Argument of type '{ id: string; data: Date; simulacao: SimulacaoInput; resultado: ResultadoSimulacao; }[]' is not assignable to parameter of type 'HistoricoItem[]'.
+  Type '{ id: string; data: Date; simulacao: SimulacaoInput; resultado: ResultadoSimulacao; }' is missing the following properties from type 'HistoricoItem': tipo, titulo, dados, dataCreacao
+src/hooks/useInsights.ts(70,56): error TS2345: Argument of type '{ id: string; data: Date; simulacao: SimulacaoInput; resultado: ResultadoSimulacao; }[]' is not assignable to parameter of type 'HistoricoItem[]'.
+  Type '{ id: string; data: Date; simulacao: SimulacaoInput; resultado: ResultadoSimulacao; }' is missing the following properties from type 'HistoricoItem': tipo, titulo, dados, dataCreacao
+src/hooks/useInsights.ts(190,52): error TS2345: Argument of type '{ id: string; data: Date; simulacao: SimulacaoInput; resultado: ResultadoSimulacao; }[]' is not assignable to parameter of type 'HistoricoItem[]'.
+  Type '{ id: string; data: Date; simulacao: SimulacaoInput; resultado: ResultadoSimulacao; }' is missing the following properties from type 'HistoricoItem': tipo, titulo, dados, dataCreacao
+src/hooks/useMetasFinanceiras.ts(4,23): error TS2307: Cannot find module 'sonner' or its corresponding type declarations.
+src/hooks/useMetasFinanceiras.ts(24,46): error TS2367: This comparison appears to be unintentional because the types '"ativa" | "pausada" | "concluida" | "cancelada"' and '"em_andamento"' have no overlap.
+src/hooks/useMetasFinanceiras.ts(28,14): error TS2367: This comparison appears to be unintentional because the types '"ativa" | "pausada" | "concluida" | "cancelada"' and '"em_andamento"' have no overlap.
+src/hooks/useMetasFinanceiras.ts(80,7): error TS2322: Type '"em_andamento"' is not assignable to type '"ativa" | "pausada" | "concluida" | "cancelada"'.
+src/hooks/useMetasFinanceiras.ts(125,9): error TS2322: Type '"meta_concluida"' is not assignable to type '"concluida" | "marco" | "prazo" | "contribuicao"'.
+src/hooks/useMetasFinanceiras.ts(128,9): error TS2322: Type 'string' is not assignable to type 'Date'.
+src/hooks/useMetasFinanceiras.ts(138,9): error TS2322: Type '"marco_atingido"' is not assignable to type '"concluida" | "marco" | "prazo" | "contribuicao"'.
+src/hooks/useMetasFinanceiras.ts(141,9): error TS2322: Type 'string' is not assignable to type 'Date'.
+src/hooks/useMetasFinanceiras.ts(150,9): error TS2322: Type '"marco_atingido"' is not assignable to type '"concluida" | "marco" | "prazo" | "contribuicao"'.
+src/hooks/useMetasFinanceiras.ts(153,9): error TS2322: Type 'string' is not assignable to type 'Date'.
+src/hooks/useMetasFinanceiras.ts(162,9): error TS2322: Type '"marco_atingido"' is not assignable to type '"concluida" | "marco" | "prazo" | "contribuicao"'.
+src/hooks/useMetasFinanceiras.ts(165,9): error TS2322: Type 'string' is not assignable to type 'Date'.
+src/hooks/useMetasFinanceiras.ts(178,25): error TS2322: Type '"pausada" | "em_andamento"' is not assignable to type '"ativa" | "pausada" | "concluida" | "cancelada"'.
+  Type '"em_andamento"' is not assignable to type '"ativa" | "pausada" | "concluida" | "cancelada"'.
+src/utils/favoritos.ts(133,31): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/utils/favoritos.ts(134,31): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/utils/favoritos.ts(183,57): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/utils/favoritos.ts(187,58): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/utils/favoritos.ts(188,56): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/utils/favoritos.ts(214,11): error TS2339: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'.
+src/utils/favoritos.ts(214,23): error TS2339: Property 'rendimentoTotal' does not exist on type 'ResultadoSimulacao'.
+src/utils/favoritos.ts(215,11): error TS2339: Property 'valorInicial' does not exist on type 'Simulacao'.
+src/utils/favoritos.ts(215,25): error TS2339: Property 'periodo' does not exist on type 'Simulacao'.
+src/utils/favoritos.ts(258,58): error TS2339: Property 'rendimentoTotal' does not exist on type 'ResultadoSimulacao'.
+src/utils/favoritos.ts(262,55): error TS2339: Property 'periodo' does not exist on type 'Simulacao'.
+src/utils/favoritos.ts(266,55): error TS2339: Property 'valorInicial' does not exist on type 'Simulacao'.
+src/utils/favoritos.ts(369,17): error TS2339: Property 'valorInicial' does not exist on type 'Simulacao'.
+src/utils/favoritos.ts(370,17): error TS2339: Property 'valorMensal' does not exist on type 'Simulacao'.
+src/utils/favoritos.ts(371,17): error TS2339: Property 'periodo' does not exist on type 'Simulacao'.
+src/utils/favoritos.ts(372,17): error TS2339: Property 'modalidade' does not exist on type 'Simulacao'.
+src/utils/favoritos.ts(373,18): error TS2551: Property 'saldoFinal' does not exist on type 'ResultadoSimulacao'. Did you mean 'valorFinal'?
+src/utils/favoritos.ts(374,18): error TS2339: Property 'rendimentoTotal' does not exist on type 'ResultadoSimulacao'.
+src/utils/insights.ts(23,54): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(33,67): error TS2339: Property 'data' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(39,53): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(49,67): error TS2339: Property 'data' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(55,47): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(65,67): error TS2339: Property 'data' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(121,37): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(122,37): error TS2339: Property 'resultado' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(212,58): error TS2339: Property 'resultado' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(218,26): error TS2339: Property 'resultado' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(219,25): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(219,53): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(219,79): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(237,20): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(237,48): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(237,74): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(252,74): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(267,26): error TS2339: Property 'resultado' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(268,25): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(268,53): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(268,79): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(301,23): error TS2339: Property 'resultado' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(303,40): error TS2339: Property 'resultado' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(322,58): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(384,20): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(384,48): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(384,74): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(387,73): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(389,58): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(393,47): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(394,41): error TS2339: Property 'simulacao' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(451,33): error TS2339: Property 'modalidade' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(454,38): error TS2339: Property 'valorInicial' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(454,88): error TS2339: Property 'periodo' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(455,15): error TS2339: Property 'valorMensal' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(455,66): error TS2339: Property 'periodo' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(458,34): error TS2339: Property 'valorInicial' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(458,84): error TS2339: Property 'periodo' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(459,60): error TS2339: Property 'periodo' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(465,33): error TS2339: Property 'modalidade' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(468,38): error TS2339: Property 'valorInicial' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(468,88): error TS2339: Property 'periodo' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(469,15): error TS2339: Property 'valorMensal' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(469,66): error TS2339: Property 'periodo' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(472,34): error TS2339: Property 'valorInicial' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(473,15): error TS2339: Property 'valorMensal' does not exist on type 'SimulacaoJuros'.
+src/utils/insights.ts(507,58): error TS2339: Property 'resultado' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(509,57): error TS2339: Property 'resultado' does not exist on type 'HistoricoItem'.
+src/utils/insights.ts(569,14): error TS2339: Property 'data' does not exist on type 'HistoricoItem'.
