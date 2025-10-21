@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from './ui/textarea';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
+import { useToast } from '../hooks/useToast';
 import {
   Heart,
   Star,
@@ -38,7 +39,10 @@ import {
   X,
   BookmarkPlus,
   Bookmark,
-  GitCompare
+  GitCompare,
+  CheckCircle,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { useFavoritosAvancados } from '../hooks/useFavoritosAvancados';
 import { useSimulacao } from '../store/useAppStore';
@@ -46,6 +50,7 @@ import { SimulacaoFavorita, Tag as TagType } from '../types/favoritos';
 import { CATEGORIAS_SIMULACAO, CORES_TAGS } from '../utils/favoritos';
 
 export const SistemaFavoritos: React.FC = () => {
+  const { addToast } = useToast();
   const {
     simulacoesFiltradas,
     comparacoesSimulacoes,
@@ -84,6 +89,7 @@ export const SistemaFavoritos: React.FC = () => {
   const [modalTag, setModalTag] = useState(false);
   const [modalComparacao, setModalComparacao] = useState(false);
   const [modalExportar, setModalExportar] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Estados para formulários
   const [formSalvar, setFormSalvar] = useState({
@@ -125,6 +131,25 @@ export const SistemaFavoritos: React.FC = () => {
 
   // Função para salvar simulação atual
   const handleSalvarSimulacao = async () => {
+    if (!formSalvar.nome.trim()) {
+      addToast({
+        type: 'error',
+        title: 'Erro de validação',
+        message: 'Nome é obrigatório'
+      });
+      return;
+    }
+
+    if (!simulacao) {
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        message: 'Nenhuma simulação encontrada para salvar'
+      });
+      return;
+    }
+
+    setIsLoading(true);
     try {
       await salvarComoFavorita(
         formSalvar.nome,
@@ -136,45 +161,117 @@ export const SistemaFavoritos: React.FC = () => {
           tags: formSalvar.tags
         }
       );
+      
+      addToast({
+        type: 'success',
+        title: 'Sucesso!',
+        message: 'Simulação salva como favorita'
+      });
+      
       setModalSalvar(false);
       setFormSalvar({ nome: '', descricao: '', categoria: 'pessoal', tags: [] });
     } catch (error) {
       console.error('Erro ao salvar simulação:', error);
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        message: error instanceof Error ? error.message : 'Erro ao salvar simulação'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Função para criar nova tag
   const handleCriarTag = () => {
+    if (!formTag.nome.trim()) {
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        message: 'Nome da tag é obrigatório'
+      });
+      return;
+    }
+
+    setIsLoading(true);
     try {
       criarNovaTag(formTag.nome, {
         descricao: formTag.descricao,
         cor: formTag.cor
       });
+      
+      addToast({
+        type: 'success',
+        title: 'Sucesso!',
+        message: 'Tag criada com sucesso'
+      });
+      
       setModalTag(false);
       setFormTag({ nome: '', descricao: '', cor: CORES_TAGS[0] });
     } catch (error) {
       console.error('Erro ao criar tag:', error);
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao criar tag'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Função para criar comparação
   const handleCriarComparacao = () => {
+    if (!formComparacao.nome.trim()) {
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        message: 'Nome da comparação é obrigatório'
+      });
+      return;
+    }
+
+    if (simulacoesSelecionadas.length < 2) {
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        message: 'Selecione pelo menos 2 simulações para comparar'
+      });
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const simulacoesSelecionadasObj = simulacoesFiltradas.filter(sim => 
         simulacoesSelecionadas.includes(sim.id)
       );
       
       criarComparacao(simulacoesSelecionadasObj, formComparacao.nome);
+      
+      addToast({
+        type: 'success',
+        title: 'Sucesso!',
+        message: 'Comparação criada com sucesso'
+      });
+      
       setModalComparacao(false);
       setFormComparacao({ nome: '', descricao: '' });
       limparSelecao();
     } catch (error) {
       console.error('Erro ao criar comparação:', error);
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao criar comparação'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Função para exportar simulações
   const handleExportar = async (formato: 'json' | 'csv' | 'excel') => {
+    setIsLoading(true);
     try {
       const simulacoesParaExportar = simulacoesSelecionadas.length > 0
         ? simulacoesFiltradas.filter(sim => simulacoesSelecionadas.includes(sim.id))
@@ -195,11 +292,47 @@ export const SistemaFavoritos: React.FC = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
+      addToast({
+        type: 'success',
+        title: 'Sucesso!',
+        message: `Simulações exportadas em formato ${formato.toUpperCase()}`
+      });
+      
       setModalExportar(false);
     } catch (error) {
       console.error('Erro ao exportar:', error);
+      addToast({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao exportar simulações'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Função para remover simulação com confirmação
+  const handleRemoverSimulacao = (id: string, nome: string) => {
+    if (window.confirm(`Tem certeza que deseja remover a simulação "${nome}"?`)) {
+      try {
+        removerSimulacaoFavorita(id);
+        addToast({
+          type: 'success',
+          title: 'Sucesso!',
+          message: 'Simulação removida com sucesso'
+        });
+      } catch (error) {
+        addToast({
+          type: 'error',
+          title: 'Erro',
+          message: 'Erro ao remover simulação'
+        });
+      }
+    }
+  };
+
+  // Verificar se há simulação atual para salvar
+  const temSimulacaoAtual = simulacao && (simulacao.valorInicial > 0 || simulacao.valorMensal > 0);
 
   return (
     <div className="space-y-6">
@@ -308,7 +441,12 @@ export const SistemaFavoritos: React.FC = () => {
               {/* Salvar simulação atual */}
               <Dialog open={modalSalvar} onOpenChange={setModalSalvar}>
                 <DialogTrigger>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={!temSimulacaoAtual}
+                    title={!temSimulacaoAtual ? "Faça uma simulação primeiro" : "Salvar simulação atual como favorita"}
+                  >
                     <BookmarkPlus className="w-4 h-4 mr-1" />
                     Salvar Atual
                   </Button>
@@ -318,15 +456,29 @@ export const SistemaFavoritos: React.FC = () => {
                     <DialogTitle>Salvar Simulação como Favorita</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
+                    {!temSimulacaoAtual && (
+                      <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                        <AlertCircle className="w-4 h-4 text-yellow-600" />
+                        <p className="text-sm text-yellow-700">
+                          Faça uma simulação primeiro para poder salvá-la como favorita.
+                        </p>
+                      </div>
+                    )}
+                    
                     <div>
-                      <Label htmlFor="nome">Nome</Label>
+                      <Label htmlFor="nome">Nome *</Label>
                       <Input
                         id="nome"
                         value={formSalvar.nome}
                         onChange={(e) => setFormSalvar(prev => ({ ...prev, nome: e.target.value }))}
                         placeholder="Nome da simulação"
+                        maxLength={100}
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formSalvar.nome.length}/100 caracteres
+                      </p>
                     </div>
+                    
                     <div>
                       <Label htmlFor="descricao">Descrição</Label>
                       <Textarea
@@ -334,8 +486,14 @@ export const SistemaFavoritos: React.FC = () => {
                         value={formSalvar.descricao}
                         onChange={(e) => setFormSalvar(prev => ({ ...prev, descricao: e.target.value }))}
                         placeholder="Descrição opcional"
+                        maxLength={500}
+                        rows={3}
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formSalvar.descricao.length}/500 caracteres
+                      </p>
                     </div>
+                    
                     <div>
                       <Label htmlFor="categoria">Categoria</Label>
                       <Select
@@ -348,15 +506,26 @@ export const SistemaFavoritos: React.FC = () => {
                         <SelectContent>
                           {CATEGORIAS_SIMULACAO.map(cat => (
                             <SelectItem key={cat.id} value={cat.id}>
-                              {cat.nome}
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full" 
+                                  style={{ backgroundColor: cat.cor }}
+                                />
+                                {cat.nome}
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
+                    
                     <div className="flex gap-2">
-                      <Button onClick={handleSalvarSimulacao} className="flex-1">
-                        Salvar
+                      <Button 
+                        onClick={handleSalvarSimulacao} 
+                        className="flex-1"
+                        disabled={isLoading || !temSimulacaoAtual}
+                      >
+                        {isLoading ? "Salvando..." : "Salvar"}
                       </Button>
                       <Button variant="outline" onClick={() => setModalSalvar(false)}>
                         Cancelar
@@ -399,18 +568,29 @@ export const SistemaFavoritos: React.FC = () => {
                     <DialogTitle>Exportar Simulações</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                      {simulacoesSelecionadas.length > 0 
-                        ? `Exportando ${simulacoesSelecionadas.length} simulações selecionadas`
-                        : `Exportando todas as ${simulacoesFiltradas.length} simulações filtradas`
-                      }
-                    </p>
+                    <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <Info className="w-4 h-4 text-blue-600" />
+                      <p className="text-sm text-blue-700">
+                        {simulacoesSelecionadas.length > 0 
+                          ? `Exportando ${simulacoesSelecionadas.length} simulações selecionadas`
+                          : `Exportando todas as ${simulacoesFiltradas.length} simulações filtradas`
+                        }
+                      </p>
+                    </div>
                     <div className="flex gap-2">
-                      <Button onClick={() => handleExportar('json')} className="flex-1">
-                        JSON
+                      <Button 
+                        onClick={() => handleExportar('json')} 
+                        className="flex-1"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Exportando..." : "JSON"}
                       </Button>
-                      <Button onClick={() => handleExportar('csv')} className="flex-1">
-                        CSV
+                      <Button 
+                        onClick={() => handleExportar('csv')} 
+                        className="flex-1"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Exportando..." : "CSV"}
                       </Button>
                     </div>
                   </div>
@@ -439,12 +619,13 @@ export const SistemaFavoritos: React.FC = () => {
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="nomeComparacao">Nome da Comparação</Label>
+                        <Label htmlFor="nomeComparacao">Nome da Comparação *</Label>
                         <Input
                           id="nomeComparacao"
                           value={formComparacao.nome}
                           onChange={(e) => setFormComparacao(prev => ({ ...prev, nome: e.target.value }))}
                           placeholder="Nome da comparação"
+                          maxLength={100}
                         />
                       </div>
                       <div className="flex gap-2">
@@ -470,9 +651,30 @@ export const SistemaFavoritos: React.FC = () => {
       {/* Conteúdo principal */}
       <Tabs defaultValue="simulacoes" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="simulacoes">Simulações Favoritas</TabsTrigger>
-          <TabsTrigger value="comparacoes">Comparações</TabsTrigger>
-          <TabsTrigger value="tags">Tags</TabsTrigger>
+          <TabsTrigger value="simulacoes">
+            Simulações Favoritas
+            {estatisticas.totalFavoritas > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {estatisticas.totalFavoritas}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="comparacoes">
+            Comparações
+            {comparacoesSimulacoes.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {comparacoesSimulacoes.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="tags">
+            Tags
+            {tags.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {tags.length}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="estatisticas">Estatísticas</TabsTrigger>
         </TabsList>
 
@@ -480,43 +682,91 @@ export const SistemaFavoritos: React.FC = () => {
           {simulacoesFiltradas.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
-                <Bookmark className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                  Nenhuma simulação favorita encontrada
+                <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                  {estatisticas.totalFavoritas === 0 
+                    ? "Nenhuma simulação favorita ainda"
+                    : "Nenhuma simulação encontrada"
+                  }
                 </h3>
-                <p className="text-gray-500 mb-4">
-                  Comece salvando suas simulações como favoritas para organizá-las melhor.
+                <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                  {estatisticas.totalFavoritas === 0 
+                    ? "Comece salvando suas simulações como favoritas para organizá-las melhor e acessá-las rapidamente."
+                    : "Tente ajustar os filtros de busca para encontrar suas simulações."
+                  }
                 </p>
-                <Button onClick={() => setModalSalvar(true)}>
-                  <BookmarkPlus className="w-4 h-4 mr-2" />
-                  Salvar Simulação Atual
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  {estatisticas.totalFavoritas === 0 ? (
+                    <Button 
+                      onClick={() => setModalSalvar(true)}
+                      disabled={!temSimulacaoAtual}
+                    >
+                      <BookmarkPlus className="w-4 h-4 mr-2" />
+                      Salvar Simulação Atual
+                    </Button>
+                  ) : (
+                    <Button variant="outline" onClick={limparFiltros}>
+                      <X className="w-4 h-4 mr-2" />
+                      Limpar Filtros
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ) : (
-            <div className={visualizacao === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
-              : 'space-y-4'
-            }>
-              <AnimatePresence>
-                {simulacoesFiltradas.map((simulacao) => (
-                  <SimulacaoCard
-                    key={simulacao.id}
-                    simulacao={simulacao}
-                    visualizacao={visualizacao}
-                    selecionada={simulacoesSelecionadas.includes(simulacao.id)}
-                    onSelecionar={() => toggleSelecao(simulacao.id)}
-                    onToggleFavorita={() => toggleFavorita(simulacao.id)}
-                    onDuplicar={() => duplicarSimulacaoFavorita(simulacao.id)}
-                    onRemover={() => removerSimulacaoFavorita(simulacao.id)}
-                    onVisualizar={() => incrementarVisualizacoes(simulacao.id)}
-                    tags={tags}
-                    formatarMoeda={formatarMoeda}
-                    formatarPorcentagem={formatarPorcentagem}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
+            <>
+              {/* Ações em lote */}
+              {simulacoesFiltradas.length > 1 && (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={simulacoesSelecionadas.length === simulacoesFiltradas.length}
+                      onChange={() => {
+                        if (simulacoesSelecionadas.length === simulacoesFiltradas.length) {
+                          limparSelecao();
+                        } else {
+                          selecionarTodas();
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-600">
+                      Selecionar todas ({simulacoesFiltradas.length})
+                    </span>
+                  </div>
+                  {simulacoesSelecionadas.length > 0 && (
+                    <span className="text-sm text-blue-600">
+                      {simulacoesSelecionadas.length} selecionadas
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className={visualizacao === 'grid' 
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+                : 'space-y-4'
+              }>
+                <AnimatePresence>
+                  {simulacoesFiltradas.map((simulacao) => (
+                    <SimulacaoCard
+                      key={simulacao.id}
+                      simulacao={simulacao}
+                      visualizacao={visualizacao}
+                      selecionada={simulacoesSelecionadas.includes(simulacao.id)}
+                      onSelecionar={() => toggleSelecao(simulacao.id)}
+                      onToggleFavorita={() => toggleFavorita(simulacao.id)}
+                      onDuplicar={() => duplicarSimulacaoFavorita(simulacao.id)}
+                      onRemover={() => handleRemoverSimulacao(simulacao.id, simulacao.nome)}
+                      onVisualizar={() => incrementarVisualizacoes(simulacao.id)}
+                      tags={tags}
+                      formatarMoeda={formatarMoeda}
+                      formatarPorcentagem={formatarPorcentagem}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </>
           )}
         </TabsContent>
 
@@ -525,13 +775,24 @@ export const SistemaFavoritos: React.FC = () => {
             {comparacoesSimulacoes.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <GitCompare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                  <GitCompare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
                     Nenhuma comparação criada
                   </h3>
-                  <p className="text-gray-500">
-                    Selecione múltiplas simulações para criar comparações.
+                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                    Selecione múltiplas simulações favoritas para criar comparações e analisar qual é a melhor opção.
                   </p>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      // Mudar para aba de simulações
+                      const tabsElement = document.querySelector('[value="simulacoes"]') as HTMLElement;
+                      tabsElement?.click();
+                    }}
+                  >
+                    <Bookmark className="w-4 h-4 mr-2" />
+                    Ver Simulações
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -590,13 +851,17 @@ export const SistemaFavoritos: React.FC = () => {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="nomeTag">Nome</Label>
+                      <Label htmlFor="nomeTag">Nome *</Label>
                       <Input
                         id="nomeTag"
                         value={formTag.nome}
                         onChange={(e) => setFormTag(prev => ({ ...prev, nome: e.target.value }))}
                         placeholder="Nome da tag"
+                        maxLength={50}
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formTag.nome.length}/50 caracteres
+                      </p>
                     </div>
                     <div>
                       <Label htmlFor="descricaoTag">Descrição</Label>
@@ -605,19 +870,25 @@ export const SistemaFavoritos: React.FC = () => {
                         value={formTag.descricao}
                         onChange={(e) => setFormTag(prev => ({ ...prev, descricao: e.target.value }))}
                         placeholder="Descrição opcional"
+                        maxLength={200}
+                        rows={2}
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formTag.descricao.length}/200 caracteres
+                      </p>
                     </div>
                     <div>
                       <Label>Cor</Label>
-                      <div className="flex gap-2 mt-2">
+                      <div className="flex gap-2 mt-2 flex-wrap">
                         {CORES_TAGS.map((cor) => (
                           <button
                             key={cor}
-                            className={`w-8 h-8 rounded-full border-2 ${
-                              formTag.cor === cor ? 'border-gray-800' : 'border-gray-300'
+                            className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                              formTag.cor === cor ? 'border-gray-800 ring-2 ring-gray-300' : 'border-gray-300'
                             }`}
                             style={{ backgroundColor: cor }}
                             onClick={() => setFormTag(prev => ({ ...prev, cor }))}
+                            title={cor}
                           />
                         ))}
                       </div>
@@ -635,23 +906,46 @@ export const SistemaFavoritos: React.FC = () => {
               </Dialog>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tagsPopulares.map((tag) => (
-                <Card key={tag.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge style={{ backgroundColor: tag.cor, color: 'white' }}>
-                        {tag.nome}
-                      </Badge>
-                      <span className="text-sm text-gray-500">{tag.uso} usos</span>
-                    </div>
-                    {tag.descricao && (
-                      <p className="text-sm text-gray-600">{tag.descricao}</p>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {tags.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Tag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                    Nenhuma tag criada
+                  </h3>
+                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                    Crie tags para organizar melhor suas simulações favoritas por categorias personalizadas.
+                  </p>
+                  <Button onClick={() => setModalTag(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Criar Primeira Tag
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tagsPopulares.map((tag) => (
+                  <Card key={tag.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge 
+                          style={{ backgroundColor: tag.cor, color: 'white' }}
+                          className="text-sm"
+                        >
+                          {tag.nome}
+                        </Badge>
+                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                          {tag.uso} {tag.uso === 1 ? 'uso' : 'usos'}
+                        </span>
+                      </div>
+                      {tag.descricao && (
+                        <p className="text-sm text-gray-600">{tag.descricao}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -660,28 +954,31 @@ export const SistemaFavoritos: React.FC = () => {
             {/* Estatísticas gerais */}
             <Card>
               <CardHeader>
-                <CardTitle>Resumo Geral</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Resumo Geral
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span>Total de Simulações:</span>
                   <span className="font-semibold">{estatisticas.totalSimulacoes}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span>Simulações Favoritas:</span>
-                  <span className="font-semibold">{estatisticas.totalFavoritas}</span>
+                  <span className="font-semibold text-blue-600">{estatisticas.totalFavoritas}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span>Valor Médio Investido:</span>
-                  <span className="font-semibold">{formatarMoeda(estatisticas.valorMedioInvestido)}</span>
+                  <span className="font-semibold text-green-600">{formatarMoeda(estatisticas.valorMedioInvestido)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span>Período Médio:</span>
                   <span className="font-semibold">{Math.round(estatisticas.periodoMedio)} meses</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span>Rendimento Médio:</span>
-                  <span className="font-semibold">{formatarMoeda(estatisticas.rendimentoMedio)}</span>
+                  <span className="font-semibold text-orange-600">{formatarMoeda(estatisticas.rendimentoMedio)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -689,25 +986,42 @@ export const SistemaFavoritos: React.FC = () => {
             {/* Categorias */}
             <Card>
               <CardHeader>
-                <CardTitle>Por Categoria</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Por Categoria
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {Object.entries(estatisticas.categorias).map(([categoria, quantidade]) => {
-                    const categoriaInfo = CATEGORIAS_SIMULACAO.find(cat => cat.id === categoria);
-                    const porcentagem = (quantidade / estatisticas.totalSimulacoes) * 100;
-                    
-                    return (
-                      <div key={categoria}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>{categoriaInfo?.nome || categoria}</span>
-                          <span>{quantidade} ({porcentagem.toFixed(1)}%)</span>
+                {Object.keys(estatisticas.categorias).length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Nenhuma categoria com simulações ainda</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(estatisticas.categorias).map(([categoria, quantidade]) => {
+                      const categoriaInfo = CATEGORIAS_SIMULACAO.find(cat => cat.id === categoria);
+                      const porcentagem = (quantidade / estatisticas.totalSimulacoes) * 100;
+                      
+                      return (
+                        <div key={categoria}>
+                          <div className="flex justify-between text-sm mb-1">
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: categoriaInfo?.cor }}
+                              />
+                              <span>{categoriaInfo?.nome || categoria}</span>
+                            </div>
+                            <span className="font-medium">
+                              {quantidade} ({porcentagem.toFixed(1)}%)
+                            </span>
+                          </div>
+                          <Progress value={porcentagem} className="h-2" />
                         </div>
-                        <Progress value={porcentagem} className="h-2" />
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -717,7 +1031,7 @@ export const SistemaFavoritos: React.FC = () => {
   );
 };
 
-// Componente para card de simulação
+// Componente SimulacaoCard
 interface SimulacaoCardProps {
   simulacao: SimulacaoFavorita;
   visualizacao: 'grid' | 'lista';
@@ -745,128 +1059,291 @@ const SimulacaoCard: React.FC<SimulacaoCardProps> = ({
   formatarMoeda,
   formatarPorcentagem
 }) => {
-  const tagsSimulacao = tags.filter(tag => simulacao.tags.includes(tag.id));
-  const categoria = CATEGORIAS_SIMULACAO.find(cat => cat.id === simulacao.categoria);
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className={visualizacao === 'grid' ? '' : 'w-full'}
-    >
-      <Card className={`cursor-pointer transition-all hover:shadow-md ${
-        selecionada ? 'ring-2 ring-blue-500' : ''
-      }`}>
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
+  const categoriaInfo = CATEGORIAS_SIMULACAO.find(cat => cat.id === simulacao.categoria);
+  
+  if (visualizacao === 'lista') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Card className={`hover:shadow-md transition-all ${selecionada ? 'ring-2 ring-blue-500' : ''}`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 flex-1">
                 <input
                   type="checkbox"
                   checked={selecionada}
                   onChange={onSelecionar}
                   className="rounded"
                 />
-                <CardTitle className="text-lg">{simulacao.nome}</CardTitle>
+                
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-lg">{simulacao.nome}</h3>
+                    {categoriaInfo && (
+                      <Badge 
+                        variant="secondary"
+                        style={{ backgroundColor: categoriaInfo.cor, color: 'white' }}
+                      >
+                        {categoriaInfo.nome}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {simulacao.descricao && (
+                    <p className="text-sm text-gray-600 mb-2">{simulacao.descricao}</p>
+                  )}
+                  
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <span>Valor Inicial: {formatarMoeda(simulacao.simulacao.valorInicial)}</span>
+                    <span>Período: {simulacao.simulacao.periodo} meses</span>
+                    <span>Taxa: {formatarPorcentagem(simulacao.simulacao.parametros?.taxa || 0)}</span>
+                    {simulacao.resultado && (
+                      <span className="text-green-600 font-medium">
+                        Final: {formatarMoeda(simulacao.resultado.valorFinal)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {simulacao.tags.length > 0 && (
+                    <div className="flex gap-1 mt-2">
+                      {simulacao.tags.slice(0, 3).map((tagId) => {
+                        const tag = tags.find(t => t.id === tagId);
+                        return tag ? (
+                          <Badge 
+                            key={tag.id}
+                            variant="outline"
+                            style={{ borderColor: tag.cor, color: tag.cor }}
+                            className="text-xs"
+                          >
+                            {tag.nome}
+                          </Badge>
+                        ) : null;
+                      })}
+                      {simulacao.tags.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{simulacao.tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <div className="text-right text-sm text-gray-500 mr-4">
+                  <div>Criado em {new Date(simulacao.dataCriacao).toLocaleDateString()}</div>
+                  <div>{simulacao.estatisticas.visualizacoes} visualizações</div>
+                </div>
+                
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onToggleFavorita}
-                  className="p-1"
+                  className="text-red-500 hover:text-red-600"
                 >
-                  <Heart 
-                    className={`w-4 h-4 ${
-                      simulacao.isFavorita ? 'fill-red-500 text-red-500' : 'text-gray-400'
-                    }`} 
-                  />
+                  <Heart className="w-4 h-4 fill-current" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onDuplicar}
+                  title="Duplicar simulação"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onVisualizar}
+                  title="Visualizar simulação"
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onRemover}
+                  className="text-red-500 hover:text-red-600"
+                  title="Remover simulação"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Badge 
-                  variant="secondary" 
-                  style={{ backgroundColor: categoria?.cor, color: 'white' }}
-                >
-                  {categoria?.nome}
-                </Badge>
-                <span>{simulacao.dataCriacao.toLocaleDateString()}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className={`hover:shadow-lg transition-all cursor-pointer ${selecionada ? 'ring-2 ring-blue-500' : ''}`}>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selecionada}
+                onChange={onSelecionar}
+                className="rounded"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div>
+                <CardTitle className="text-lg">{simulacao.nome}</CardTitle>
+                {categoriaInfo && (
+                  <Badge 
+                    variant="secondary"
+                    style={{ backgroundColor: categoriaInfo.cor, color: 'white' }}
+                    className="mt-1"
+                  >
+                    {categoriaInfo.nome}
+                  </Badge>
+                )}
               </div>
             </div>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={onDuplicar}>
-                <Copy className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onRemover}>
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorita();
+              }}
+              className="text-red-500 hover:text-red-600"
+            >
+              <Heart className="w-4 h-4 fill-current" />
+            </Button>
           </div>
         </CardHeader>
         
-        <CardContent className="pt-0">
+        <CardContent className="space-y-4">
           {simulacao.descricao && (
-            <p className="text-sm text-gray-600 mb-3">{simulacao.descricao}</p>
+            <p className="text-sm text-gray-600 line-clamp-2">{simulacao.descricao}</p>
           )}
           
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <p className="text-xs text-gray-500">Valor Inicial</p>
-              <p className="font-semibold">{formatarMoeda(simulacao.simulacao.parametros.valorInicial)}</p>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Valor Inicial:</span>
+              <span className="font-medium">{formatarMoeda(simulacao.simulacao.valorInicial)}</span>
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Período</p>
-              <p className="font-semibold">{simulacao.simulacao.parametros.periodo} meses</p>
+            
+            {simulacao.simulacao.valorMensal > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Valor Mensal:</span>
+                <span className="font-medium">{formatarMoeda(simulacao.simulacao.valorMensal)}</span>
+              </div>
+            )}
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Período:</span>
+              <span className="font-medium">{simulacao.simulacao.periodo} meses</span>
             </div>
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Taxa:</span>
+              <span className="font-medium">{formatarPorcentagem(simulacao.simulacao.parametros?.taxa || 0)}</span>
+            </div>
+            
             {simulacao.resultado && (
               <>
-                <div>
-                  <p className="text-xs text-gray-500">Saldo Final</p>
-                  <p className="font-semibold text-green-600">
+                <Separator />
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Valor Final:</span>
+                  <span className="font-semibold text-green-600">
                     {formatarMoeda(simulacao.resultado.valorFinal)}
-                  </p>
+                  </span>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">Rendimento</p>
-                  <p className="font-semibold text-blue-600">
-                    {formatarMoeda(simulacao.resultado.totalJuros)}
-                  </p>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Rendimento:</span>
+                  <span className="font-semibold text-blue-600">
+                    {formatarMoeda(simulacao.resultado.rendimentoTotal)}
+                  </span>
                 </div>
               </>
             )}
           </div>
-
-          {tagsSimulacao.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
-              {tagsSimulacao.map(tag => (
-                <Badge 
-                  key={tag.id} 
-                  variant="outline" 
-                  className="text-xs"
-                  style={{ borderColor: tag.cor, color: tag.cor }}
-                >
-                  {tag.nome}
+          
+          {simulacao.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {simulacao.tags.slice(0, 3).map((tagId) => {
+                const tag = tags.find(t => t.id === tagId);
+                return tag ? (
+                  <Badge 
+                    key={tag.id}
+                    variant="outline"
+                    style={{ borderColor: tag.cor, color: tag.cor }}
+                    className="text-xs"
+                  >
+                    {tag.nome}
+                  </Badge>
+                ) : null;
+              })}
+              {simulacao.tags.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{simulacao.tags.length - 3}
                 </Badge>
-              ))}
+              )}
             </div>
           )}
-
-          {simulacao.estatisticas && (
-            <div className="flex items-center gap-4 text-xs text-gray-500">
-              <div className="flex items-center gap-1">
-                <Eye className="w-3 h-3" />
-                {simulacao.estatisticas.visualizacoes}
-              </div>
-              <div className="flex items-center gap-1">
-                <Copy className="w-3 h-3" />
-                {simulacao.estatisticas.copias}
-              </div>
-              <div className="flex items-center gap-1">
-                <Share2 className="w-3 h-3" />
-                {simulacao.estatisticas.compartilhamentos}
-              </div>
-            </div>
-          )}
+          
+          <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
+            <span>{new Date(simulacao.dataCriacao).toLocaleDateString()}</span>
+            <span>{simulacao.estatisticas.visualizacoes} visualizações</span>
+          </div>
+          
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicar();
+              }}
+              className="flex-1"
+            >
+              <Copy className="w-4 h-4 mr-1" />
+              Duplicar
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onVisualizar();
+              }}
+              className="flex-1"
+            >
+              <Eye className="w-4 h-4 mr-1" />
+              Ver
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemover();
+              }}
+              className="text-red-500 hover:text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </motion.div>

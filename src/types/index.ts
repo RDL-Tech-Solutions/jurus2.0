@@ -121,6 +121,14 @@ export interface LocalStorageKeys {
   SIMULACOES_SALVAS: string;
   COMPARACOES_ATIVAS: string;
   CONFIGURACOES: string;
+  HISTORICO_SIMULACOES: string;
+  METAS_FINANCEIRAS: string;
+  PERFORMANCE_DASHBOARD: string;
+  CENARIOS_ANALISE: string;
+  RECOMENDACOES_IA: string;
+  APOSENTADORIA_DADOS: string;
+  PERFIL_INVESTIDOR: string;
+  ALERTAS_INTELIGENTES: string;
 }
 
 // Tema da aplicação

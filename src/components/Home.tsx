@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Calculator, TrendingUp, Target, BarChart3, Settings, Download, Zap, Heart, Brain, GraduationCap, HelpCircle, Bell, Accessibility, Users, Shield, Smartphone, Menu } from 'lucide-react';
 import { Z_INDEX } from '../constants/zIndex';
 import { Breadcrumbs } from './Breadcrumbs';
+import type { BreadcrumbItem } from './Breadcrumbs';
 import { Home as HomeIcon } from 'lucide-react';
 import { useSimulacao, useUI } from '../store/useAppStore';
 import { useToast } from '../hooks/useToast';
@@ -33,6 +34,11 @@ import { LoadingOverlay } from './LoadingProgress';
 import { AnimatedContainer, StaggeredContainer, AnimatedItem } from './AnimatedContainer';
 import { AnimatedButton } from './AnimatedButton';
 import { useJurosCompostos } from '../hooks/useJurosCompostos';
+import { useComparacao } from '../hooks/useComparacao';
+import { useHistorico } from '../hooks/useHistorico';
+import { testLocalStoragePersistence, checkLocalStorageStatus } from '../utils/testLocalStorage';
+import { runCompleteHomeTest } from '../utils/testHomeSections';
+import { executeFinalTest } from '../utils/finalTest';
 import {
   LazyComparadorInvestimentos,
   LazyHistoricoSimulacoes,
@@ -53,12 +59,19 @@ import TimelineMetas from './TimelineMetas';
 import CalculadoraImpostoRenda from './CalculadoraImpostoRenda';
 import SistemaFavoritos from './SistemaFavoritos';
 import DashboardInsights from './DashboardInsights';
-import SimuladorCenarios from './SimuladorCenarios';
+// SimuladorCenarios replaced with LazyAnaliseCenarios
 import SistemaEducacao from './SistemaEducacao';
 import Sidebar from './Sidebar';
 
+// Performance and accessibility hooks
+import { usePerformanceMonitor, useDebounce, useIntersectionObserver } from '../hooks/usePerformance';
+import { useBreakpoint, useResponsiveValue, useDeviceCapabilities } from '../hooks/useResponsive';
+import { useFocusManagement, useScreenReader, useReducedMotion } from '../hooks/useAccessibility';
+import { ComponentErrorBoundary } from './ErrorBoundary';
+
 export const Home = memo(() => {
   const { success, error, info } = useToast();
+  const [isNavigating, setIsNavigating] = useState(false);
   const { 
     verificarMetasProximas, 
     verificarOportunidadesMercado, 
@@ -70,6 +83,17 @@ export const Home = memo(() => {
   usePreloadComponents();
   const { registerNavigation } = useIntelligentPreload();
   const hoverPreload = useHoverPreload();
+
+  // Performance and accessibility hooks
+  const metrics = usePerformanceMonitor();
+  const { isMobile, isTablet, isDesktop } = useBreakpoint();
+  const { isTouch, prefersReducedMotion, prefersDark } = useDeviceCapabilities();
+  const { announce } = useScreenReader();
+  const shouldReduceMotion = useReducedMotion();
+  
+  // Responsive values
+  const headerHeight = useResponsiveValue({ sm: '56px', md: '64px', lg: '72px' }, '64px');
+  const sidebarWidth = useResponsiveValue({ sm: '85vw', md: '300px', lg: '320px' }, '300px');
   
   // Hook de onboarding
   const {
@@ -146,13 +170,133 @@ export const Home = memo(() => {
     showAnaliseAvancada: false,
     showDashboard: false,
     showPerformance: false,
-    showExportacao: false
+    showExportacao: false,
+    showModalidadesBancos: false
   });
 
   // Estado derivado para verificar se há resultado calculado
   const calculado = Boolean(resultado && resultado.saldoFinal > 0);
   
   const resultadoCalculado = useJurosCompostos(simulacao);
+  
+  // Hook para comparação de investimentos
+  const {
+    comparacoes,
+    adicionarComparacao,
+    removerComparacao,
+    limparComparacoes,
+    melhorInvestimento,
+    podeAdicionarMais,
+    quantidadeComparacoes
+  } = useComparacao();
+
+  // Hook para histórico de simulações
+  const { adicionarAoHistorico } = useHistorico();
+
+  // Dados de modalidades e bancos para comparação
+  const modalidadesBancos = [
+    {
+      categoria: 'Renda Fixa',
+      opcoes: [
+        { nome: 'CDI 100%', taxa: 13.75, banco: 'Média do Mercado', risco: 'Baixo' },
+        { nome: 'CDB Nubank', taxa: 13.5, banco: 'Nubank', risco: 'Baixo' },
+        { nome: 'CDB Inter', taxa: 13.8, banco: 'Inter', risco: 'Baixo' },
+        { nome: 'LCI/LCA', taxa: 12.5, banco: 'Bradesco', risco: 'Baixo' },
+        { nome: 'Tesouro Selic', taxa: 13.75, banco: 'Tesouro Nacional', risco: 'Muito Baixo' },
+        { nome: 'Tesouro IPCA+', taxa: 6.5, banco: 'Tesouro Nacional', risco: 'Baixo' }
+      ]
+    },
+    {
+      categoria: 'Fundos',
+      opcoes: [
+        { nome: 'Fundo DI', taxa: 12.8, banco: 'XP Investimentos', risco: 'Baixo' },
+        { nome: 'Fundo Multimercado', taxa: 15.2, banco: 'BTG Pactual', risco: 'Médio' },
+        { nome: 'Fundo Imobiliário', taxa: 8.5, banco: 'Diversos', risco: 'Médio' }
+      ]
+    },
+    {
+      categoria: 'Renda Variável',
+      opcoes: [
+        { nome: 'Ibovespa (Histórico)', taxa: 15.0, banco: 'B3', risco: 'Alto' },
+        { nome: 'S&P 500 (Histórico)', taxa: 18.5, banco: 'NYSE', risco: 'Alto' },
+        { nome: 'ETF IVVB11', taxa: 16.2, banco: 'iShares', risco: 'Alto' }
+      ]
+    }
+  ];
+
+  // Função para verificar se há simulação válida
+  const temSimulacaoValida = useCallback(() => {
+    return Boolean(
+      simulacao && 
+      (simulacao.valorInicial > 0 || simulacao.valorMensal > 0) &&
+      simulacao.periodo > 0 &&
+      (simulacao.taxaPersonalizada > 0 || simulacao.modalidade?.taxaAnual > 0)
+    );
+  }, [simulacao]);
+
+  // Função para capturar automaticamente a simulação atual
+  const capturarSimulacaoAtual = useCallback(() => {
+    if (!temSimulacaoValida()) {
+      error('Realize uma simulação primeiro para poder comparar investimentos');
+      setActiveTab('simulacao');
+      return;
+    }
+
+    if (!podeAdicionarMais) {
+      error('Máximo de 3 comparações permitidas. Remova uma comparação para adicionar outra.');
+      return;
+    }
+
+    const nomeSimulacao = `Simulação ${new Date().toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`;
+
+    try {
+      adicionarComparacao(simulacao, nomeSimulacao);
+      success(`Simulação "${nomeSimulacao}" adicionada ao comparador!`);
+    } catch (err) {
+      error('Erro ao adicionar simulação ao comparador');
+    }
+  }, [simulacao, temSimulacaoValida, podeAdicionarMais, adicionarComparacao, error, success, setActiveTab]);
+
+  // Função para adicionar modalidade/banco selecionado
+  const adicionarModalidadeBanco = useCallback((opcao: any) => {
+    if (!podeAdicionarMais) {
+      error('Máximo de 3 comparações permitidas. Remova uma comparação para adicionar outra.');
+      return;
+    }
+
+    // Criar simulação baseada na modalidade/banco selecionado
+    const simulacaoModalidade = {
+      ...simulacao,
+      taxaJuros: opcao.taxa,
+      taxaType: 'personalizada' as const
+    };
+
+    const nomeComparacao = `${opcao.nome} - ${opcao.banco}`;
+
+    try {
+      adicionarComparacao(simulacaoModalidade, nomeComparacao);
+      success(`"${nomeComparacao}" adicionado ao comparador!`);
+      setModals(prev => ({ ...prev, showModalidadesBancos: false }));
+    } catch (err) {
+      error('Erro ao adicionar modalidade ao comparador');
+    }
+  }, [simulacao, podeAdicionarMais, adicionarComparacao, error, success, setModals]);
+
+  // Efeito para capturar automaticamente a simulação quando acessar o comparador
+  useEffect(() => {
+    if (activeTab === 'comparador' && temSimulacaoValida() && quantidadeComparacoes === 0) {
+      // Pequeno delay para melhor UX
+      const timer = setTimeout(() => {
+        capturarSimulacaoAtual();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, temSimulacaoValida, quantidadeComparacoes, capturarSimulacaoAtual]);
 
   // Efeito para sincronizar estados de tutorial na inicialização
   useEffect(() => {
@@ -162,6 +306,109 @@ export const Home = memo(() => {
     return () => clearTimeout(timer);
   }, [refreshCompletedTutorials]);
 
+  // Teste de persistência do localStorage na inicialização
+  useEffect(() => {
+    const testPersistence = async () => {
+      try {
+        console.log('🔍 Iniciando teste de persistência do localStorage...');
+        
+        // Verificar status do localStorage
+        const status = checkLocalStorageStatus();
+        console.log('📊 Status do localStorage:', status);
+        
+        if (status.available) {
+          // Executar teste de persistência
+          const testResult = testLocalStoragePersistence();
+          
+          if (testResult.success) {
+            console.log('✅ Persistência do localStorage funcionando corretamente');
+            info('Sistema de persistência verificado com sucesso');
+          } else {
+            console.warn('⚠️ Problema na persistência:', testResult.message);
+            error('Problema detectado na persistência de dados');
+          }
+        } else {
+          console.error('❌ localStorage não disponível:', status.message);
+          error('Sistema de armazenamento não disponível');
+        }
+      } catch (err) {
+        console.error('💥 Erro crítico no teste de persistência:', err);
+        error('Erro crítico no sistema de persistência');
+      }
+    };
+
+    // Executar teste após um pequeno delay para não interferir na inicialização
+    const timer = setTimeout(testPersistence, 500);
+    return () => clearTimeout(timer);
+  }, [info, error]);
+
+  // Teste simplificado das seções da Home
+  useEffect(() => {
+    const testHomeSections = () => {
+      console.log('🏠 Verificando seções da Home...');
+      
+      // Lista das seções principais
+      const sections = [
+        'simulacao', 'comparador', 'historico', 'meta', 'performance', 
+        'cenarios', 'recomendacoes', 'aposentadoria'
+      ];
+      
+      let sectionsWorking = 0;
+      
+      sections.forEach(section => {
+        // Verificar se a seção está sendo renderizada corretamente
+        const hasSection = activeTab === section || section === 'simulacao';
+        
+        if (hasSection) {
+          console.log(`✅ Seção ${section} disponível`);
+          sectionsWorking++;
+        } else {
+          console.log(`📋 Seção ${section} aguardando ativação`);
+        }
+      });
+      
+      console.log(`📊 Status: ${sectionsWorking}/${sections.length} seções verificadas`);
+      
+      if (sectionsWorking > 0) {
+        info(`${sectionsWorking} seções verificadas com sucesso`);
+      }
+    };
+
+    // Executar teste após a inicialização
+    const timer = setTimeout(testHomeSections, 1500);
+    return () => clearTimeout(timer);
+  }, [activeTab, info]);
+
+  // Teste final das funcionalidades
+  useEffect(() => {
+    const runFinalTests = () => {
+      console.log('🧪 Executando teste final das funcionalidades...');
+      executeFinalTest();
+      success('Aplicação totalmente carregada e funcional! 🎉');
+    };
+
+    // Executar teste final após todos os outros testes
+    const timer = setTimeout(runFinalTests, 2000);
+    return () => clearTimeout(timer);
+  }, [success]);
+
+  // Definição das abas disponíveis
+  const tabs = [
+    { id: 'simulacao', label: 'Simulação', icon: Calculator },
+    { id: 'comparador', label: 'Comparador', icon: BarChart3 },
+    { id: 'historico', label: 'Histórico', icon: TrendingUp },
+    { id: 'meta', label: 'Calculadora de Meta', icon: Target },
+    { id: 'metas-financeiras', label: 'Metas Financeiras', icon: Target },
+    { id: 'imposto-renda', label: 'Imposto de Renda', icon: Calculator },
+    { id: 'favoritos', label: 'Favoritos', icon: Heart },
+    { id: 'insights', label: 'Insights', icon: Brain },
+    { id: 'performance', label: 'Performance', icon: TrendingUp },
+    { id: 'cenarios', label: 'Cenários', icon: Settings },
+    { id: 'educacao', label: 'Educação', icon: GraduationCap },
+    { id: 'recomendacoes', label: 'IA Recomendações', icon: Zap },
+    { id: 'aposentadoria', label: 'Aposentadoria', icon: Target }
+  ];
+
   // Função para abrir/fechar modais
   const toggleModal = useCallback((modalName: keyof typeof modals) => {
     setModals(prev => ({
@@ -170,8 +417,13 @@ export const Home = memo(() => {
     }));
   }, []);
 
-  // Função melhorada para mudança de aba com preload
+  // Função melhorada para mudança de aba com preload e feedback visual
   const handleTabChange = useCallback((tabId: string) => {
+    setIsNavigating(true);
+    
+    // Mostrar indicador de carregamento
+    info(`Carregando ${tabs.find(t => t.id === tabId)?.label || tabId}...`);
+    
     setActiveTab(tabId);
     registerNavigation(`/${tabId}`);
     
@@ -196,7 +448,13 @@ export const Home = memo(() => {
         hoverPreload.preloadEducacao();
         break;
     }
-  }, [setActiveTab, registerNavigation, hoverPreload]);
+    
+    // Feedback de sucesso após um pequeno delay
+    setTimeout(() => {
+      setIsNavigating(false);
+      success(`${tabs.find(t => t.id === tabId)?.label || tabId} carregado com sucesso!`);
+    }, 500);
+  }, [setActiveTab, registerNavigation, hoverPreload, info, success, tabs]);
 
   const handleCalcular = async () => {
     setLoading(true);
@@ -206,6 +464,11 @@ export const Home = memo(() => {
       // Simular um pequeno delay para mostrar o loading
       await new Promise(resolve => setTimeout(resolve, 500));
       setResultado(resultadoCalculado);
+      
+      // Adicionar simulação ao histórico
+      const nomeSimulacao = `Simulação ${new Date().toLocaleString('pt-BR')}`;
+      adicionarAoHistorico(nomeSimulacao, simulacao, resultadoCalculado);
+      
       success('Cálculo concluído!', 'Sua simulação foi processada com sucesso');
       
       // Adicionar notificação de sucesso
@@ -450,22 +713,6 @@ export const Home = memo(() => {
        return () => window.removeEventListener('keydown', handleKeyDown);
      }, [activeTab, isLoading, setActiveTab, showNotifications, showAccessibility, showGlobalSettings, showProfileManager, showBackupManager, openContextualHelp]);
 
-  const tabs = [
-    { id: 'simulacao', label: 'Simulação', icon: Calculator },
-    { id: 'comparador', label: 'Comparador', icon: BarChart3 },
-    { id: 'historico', label: 'Histórico', icon: TrendingUp },
-    { id: 'meta', label: 'Calculadora de Meta', icon: Target },
-    { id: 'metas-financeiras', label: 'Metas Financeiras', icon: Target },
-    { id: 'imposto-renda', label: 'Imposto de Renda', icon: Calculator },
-    { id: 'favoritos', label: 'Favoritos', icon: Heart },
-    { id: 'insights', label: 'Insights', icon: Brain },
-    { id: 'performance', label: 'Performance', icon: TrendingUp },
-    { id: 'cenarios', label: 'Cenários', icon: Settings },
-    { id: 'educacao', label: 'Educação', icon: GraduationCap },
-    { id: 'recomendacoes', label: 'IA Recomendações', icon: Zap },
-    { id: 'aposentadoria', label: 'Aposentadoria', icon: Target }
-  ];
-
   const quickActions = [
     {
       title: 'Simulação Rápida',
@@ -502,38 +749,42 @@ export const Home = memo(() => {
   ];
 
   // Breadcrumbs melhorados
-  const getBreadcrumbs = () => {
-    const breadcrumbs = [{ 
+  const getBreadcrumbs = (): BreadcrumbItem[] => {
+    const breadcrumbs: BreadcrumbItem[] = [{ 
       label: 'Início', 
       path: 'home',
       icon: <HomeIcon className="w-4 h-4" />
     }];
     
-    const tabLabels: Record<string, string> = {
-      simulacao: 'Simulação',
-      comparador: 'Comparador',
-      historico: 'Histórico',
-      meta: 'Calculadora de Meta',
-      'metas-financeiras': 'Metas Financeiras',
-      'imposto-renda': 'Imposto de Renda',
-      favoritos: 'Favoritos',
-      insights: 'Insights',
-      performance: 'Performance',
-      cenarios: 'Cenários',
-      educacao: 'Educação Financeira',
-      recomendacoes: 'IA Recomendações',
-      aposentadoria: 'Aposentadoria'
+    const tabLabels: Record<string, { label: string; icon: React.ReactNode }> = {
+      simulacao: { label: 'Simulação', icon: <Calculator className="w-4 h-4" /> },
+      comparador: { label: 'Comparador', icon: <BarChart3 className="w-4 h-4" /> },
+      historico: { label: 'Histórico', icon: <TrendingUp className="w-4 h-4" /> },
+      meta: { label: 'Calculadora de Meta', icon: <Target className="w-4 h-4" /> },
+      'metas-financeiras': { label: 'Metas Financeiras', icon: <Target className="w-4 h-4" /> },
+      'imposto-renda': { label: 'Imposto de Renda', icon: <Calculator className="w-4 h-4" /> },
+      favoritos: { label: 'Favoritos', icon: <Heart className="w-4 h-4" /> },
+      insights: { label: 'Insights', icon: <Brain className="w-4 h-4" /> },
+      performance: { label: 'Performance', icon: <TrendingUp className="w-4 h-4" /> },
+      cenarios: { label: 'Cenários', icon: <Settings className="w-4 h-4" /> },
+      educacao: { label: 'Educação Financeira', icon: <GraduationCap className="w-4 h-4" /> },
+      recomendacoes: { label: 'IA Recomendações', icon: <Zap className="w-4 h-4" /> },
+      aposentadoria: { label: 'Aposentadoria', icon: <Target className="w-4 h-4" /> }
     };
 
     if (activeTab && tabLabels[activeTab]) {
-      breadcrumbs.push({ label: tabLabels[activeTab], path: activeTab });
+      breadcrumbs.push({ 
+        label: tabLabels[activeTab].label, 
+        path: activeTab,
+        icon: tabLabels[activeTab].icon
+      });
     }
 
     return breadcrumbs;
   };
 
   // Handler para navegação dos breadcrumbs
-  const handleBreadcrumbClick = (item: { label: string; path: string; icon?: React.ReactNode }) => {
+  const handleBreadcrumbClick = (item: BreadcrumbItem) => {
     if (item.path === 'home') {
       setActiveTab('simulacao');
     } else {
@@ -541,11 +792,46 @@ export const Home = memo(() => {
     }
   };
 
+  // Performance monitoring
+  useEffect(() => {
+    if (metrics.lcp > 2500) {
+      console.warn('LCP is slow:', metrics.lcp);
+    }
+    if (metrics.fid > 100) {
+      console.warn('FID is slow:', metrics.fid);
+    }
+  }, [metrics]);
+
+  // Announce navigation changes to screen readers
+  useEffect(() => {
+    const tabLabel = tabs.find(t => t.id === activeTab)?.label || 'Simulação';
+    announce(`Navegou para ${tabLabel}`);
+  }, [activeTab, announce]);
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      {/* Header Responsivo e Fixo */}
+    <ComponentErrorBoundary>
+      <div 
+        className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+        style={{ 
+          '--header-height': headerHeight,
+          '--sidebar-width': sidebarWidth 
+        } as React.CSSProperties}
+      >
+      {/* Barra de Progresso de Navegação */}
+      {isNavigating && (
+        <motion.div
+          className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600 z-50"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          exit={{ scaleX: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{ transformOrigin: 'left' }}
+        />
+      )}
+      
+      {/* Header Responsivo e Fixo - Melhorado */}
       <header 
-        className="fixed top-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 z-50"
+        className="fixed top-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 z-50 shadow-sm"
         style={{ zIndex: Z_INDEX.STICKY_HEADER }}
       >
         <div className="flex items-center justify-between max-w-7xl mx-auto h-12 sm:h-14">
@@ -649,14 +935,23 @@ export const Home = memo(() => {
       >
         <div className="w-full max-w-7xl mx-auto">
           <div className="px-3 sm:px-4 lg:px-6 xl:px-8">
-            {/* Breadcrumbs Melhorados */}
+            {/* Breadcrumbs Melhorados com Contexto */}
             <div className="py-2 sm:py-3 border-b border-gray-100 dark:border-gray-800">
-              <Breadcrumbs
-                items={getBreadcrumbs()}
-                maxItems={3}
-                onItemClick={handleBreadcrumbClick}
-                className="w-full"
-              />
+              <div className="flex items-center justify-between">
+                <Breadcrumbs
+                  items={getBreadcrumbs()}
+                  maxItems={3}
+                  onItemClick={handleBreadcrumbClick}
+                  className="flex-1"
+                />
+                {/* Indicador de seção ativa */}
+                <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span>Seção:</span>
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full font-medium">
+                    {tabs.find(t => t.id === activeTab)?.label || 'Simulação'}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Enhanced Navigation - Container Totalmente Responsivo */}
@@ -676,7 +971,7 @@ export const Home = memo(() => {
 
       {/* Main Content - Adicionado padding-top para compensar header fixo */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 pt-28 sm:pt-32 lg:pt-36">
-        {/* Welcome Section - Only show when no tab is active or on simulacao */}
+        {/* Welcome Section - Melhorada com mais informações */}
         {activeTab === 'simulacao' && !resultado && (
           <AnimatedContainer variant="fadeIn" className="mb-8">
             <div className="text-center mb-12">
@@ -689,7 +984,7 @@ export const Home = memo(() => {
                 Calculadora de Juros Compostos
               </motion.h1>
               <motion.p 
-                className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
+                className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -779,13 +1074,77 @@ export const Home = memo(() => {
           {activeTab === 'comparador' && (
             <AnimatedContainer variant="slideUp" delay={0.1}>
               <LazyWrapper fallback={<SkeletonChart />}>
-                <LazyComparadorInvestimentos 
-                  comparacoes={[]}
-                  simulacaoAtual={simulacao}
-                  onAdicionarComparacao={() => {}}
-                  onRemoverComparacao={() => {}}
-                  onLimparComparacoes={() => {}}
-                />
+                {!temSimulacaoValida() ? (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+                    <div className="mb-6">
+                      <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Nenhuma Simulação Encontrada
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-6">
+                        Para usar o comparador de investimentos, você precisa realizar uma simulação primeiro.
+                      </p>
+                      <AnimatedButton
+                        onClick={() => setActiveTab('simulacao')}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                      >
+                        <Calculator className="w-5 h-5 mr-2" />
+                        Fazer Simulação
+                      </AnimatedButton>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Botões de ação para o comparador */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                      <div className="flex flex-wrap gap-3 items-center justify-between">
+                        <div className="flex flex-wrap gap-3">
+                          <AnimatedButton
+                            onClick={capturarSimulacaoAtual}
+                            disabled={!podeAdicionarMais}
+                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                          >
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            Adicionar Simulação Atual
+                          </AnimatedButton>
+                          
+                          <AnimatedButton
+                            onClick={() => setModals(prev => ({ ...prev, showModalidadesBancos: true }))}
+                            disabled={!podeAdicionarMais}
+                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                          >
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            Selecionar Modalidade/Banco
+                          </AnimatedButton>
+                        </div>
+                        
+                        {quantidadeComparacoes > 0 && (
+                          <AnimatedButton
+                            onClick={limparComparacoes}
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                          >
+                            Limpar Comparações
+                          </AnimatedButton>
+                        )}
+                      </div>
+                      
+                      {quantidadeComparacoes > 0 && (
+                        <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                          {quantidadeComparacoes} de 3 comparações utilizadas
+                        </div>
+                      )}
+                    </div>
+
+                    <LazyComparadorInvestimentos 
+                      comparacoes={comparacoes}
+                      simulacaoAtual={simulacao}
+                      onAdicionarComparacao={adicionarComparacao}
+                      onRemoverComparacao={removerComparacao}
+                      onLimparComparacoes={limparComparacoes}
+                      melhorInvestimento={melhorInvestimento}
+                    />
+                  </div>
+                )}
               </LazyWrapper>
             </AnimatedContainer>
           )}
@@ -903,7 +1262,7 @@ export const Home = memo(() => {
       )}
 
       {modals.showCenarios && calculado && (
-        <LazyWrapper fallback={<SkeletonCard />}>
+        <LazyWrapper fallback={<SkeletonChart />}>
           <LazyAnaliseCenarios
             simulacao={simulacao}
             onClose={() => toggleModal('showCenarios')}
@@ -912,7 +1271,7 @@ export const Home = memo(() => {
       )}
 
       {modals.showAnaliseAvancada && calculado && (
-        <LazyWrapper fallback={<SkeletonCard />}>
+        <LazyWrapper fallback={<SkeletonChart />}>
           <LazyAnaliseAvancada
             simulacao={simulacao}
             onClose={() => toggleModal('showAnaliseAvancada')}
@@ -933,7 +1292,7 @@ export const Home = memo(() => {
       {modals.showPerformance && calculado && (
         <LazyWrapper fallback={<SkeletonChart />}>
           <LazyDashboardPerformance
-            valorAtual={resultado?.saldoFinal || 0}
+            valorAtual={resultado?.valorFinal || 0}
             valorInicial={simulacao.valorInicial}
           />
         </LazyWrapper>
@@ -947,6 +1306,82 @@ export const Home = memo(() => {
             onClose={() => toggleModal('showExportacao')}
           />
         </LazyWrapper>
+      )}
+
+      {/* Modal de Seleção de Modalidades/Bancos */}
+      {modals.showModalidadesBancos && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Selecionar Modalidade/Banco para Comparação
+                </h2>
+                <button
+                  onClick={() => setModals(prev => ({ ...prev, showModalidadesBancos: false }))}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {modalidadesBancos.map((categoria, categoriaIndex) => (
+                  <div key={categoriaIndex} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      {categoria.categoria}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {categoria.opcoes.map((opcao, opcaoIndex) => (
+                        <div
+                          key={opcaoIndex}
+                          className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer"
+                          onClick={() => adicionarModalidadeBanco(opcao)}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-gray-900 dark:text-white">
+                              {opcao.nome}
+                            </h4>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              opcao.risco === 'Muito Baixo' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                              opcao.risco === 'Baixo' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                              opcao.risco === 'Médio' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }`}>
+                              {opcao.risco}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            {opcao.banco}
+                          </p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                              {opcao.taxa}% a.a.
+                            </span>
+                            <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                              Adicionar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setModals(prev => ({ ...prev, showModalidadesBancos: false }))}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Sistemas de Tutorial, Ajuda e Notificações */}
@@ -1053,7 +1488,8 @@ export const Home = memo(() => {
            }}
          />
        )}
-     </div>
+       </div>
+     </ComponentErrorBoundary>
    );
  });
 

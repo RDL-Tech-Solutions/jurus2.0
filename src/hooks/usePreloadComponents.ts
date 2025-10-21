@@ -8,9 +8,6 @@ export const usePreloadComponents = () => {
       // Dashboard Executivo (mais usado)
       import('../components/DashboardExecutivo').catch(() => {});
       
-      // Relatórios Avançados (segundo mais usado)
-      import('../components/RelatoriosAvancados').catch(() => {});
-      
       // Dashboard Executivo Avançado
       import('../components/DashboardExecutivoAvancado').catch(() => {});
     }, 2000);
@@ -18,7 +15,6 @@ export const usePreloadComponents = () => {
     // Preload de componentes secundários após 5 segundos
     const secondaryPreloadTimer = setTimeout(() => {
       import('../components/RecomendacoesIA').catch(() => {});
-      import('../components/SimuladorCenarios').catch(() => {});
       import('../components/SistemaEducacao').catch(() => {});
     }, 5000);
 
@@ -40,20 +36,18 @@ export const useHoverPreload = () => {
   return {
     preloadDashboard: preloadComponent('../components/DashboardExecutivo'),
     preloadDashboardAvancado: preloadComponent('../components/DashboardExecutivoAvancado'),
-    preloadRelatorios: preloadComponent('../components/RelatoriosAvancados'),
     preloadRecomendacoes: preloadComponent('../components/RecomendacoesIA'),
-    preloadSimulador: preloadComponent('../components/SimuladorCenarios'),
     preloadTemas: preloadComponent('../components/SistemaTemas'),
     preloadEducacao: preloadComponent('../components/SistemaEducacao'),
     preloadNotificacoes: preloadComponent('../components/CentroNotificacoes'),
     preloadAcessibilidade: preloadComponent('../components/ConfiguracoesAcessibilidade'),
     // Missing functions that were causing errors
-    preloadSimulacao: preloadComponent('../components/SimuladorCenarios'),
     preloadComparador: preloadComponent('../components/ComparadorInvestimentos'),
     preloadHistorico: preloadComponent('../components/HistoricoSimulacoes'),
     preloadMetas: preloadComponent('../components/MetasFinanceiras'),
     preloadPerformance: preloadComponent('../components/DashboardPerformance'),
-    preloadCenarios: preloadComponent('../components/SimuladorCenarios'),
+    preloadRelatorios: preloadComponent('../components/TemplatesRelatorio'),
+    preloadSimulador: preloadComponent('../components/FormularioEntrada'),
   };
 };
 
@@ -85,14 +79,8 @@ export const useIntelligentPreload = () => {
           case '/dashboard-avancado':
             import('../components/DashboardExecutivoAvancado').catch(() => {});
             break;
-          case '/relatorios':
-            import('../components/RelatoriosAvancados').catch(() => {});
-            break;
           case '/recomendacoes':
             import('../components/RecomendacoesIA').catch(() => {});
-            break;
-          case '/simulador':
-            import('../components/SimuladorCenarios').catch(() => {});
             break;
           case '/educacao':
             import('../components/SistemaEducacao').catch(() => {});

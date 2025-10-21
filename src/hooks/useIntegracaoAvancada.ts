@@ -85,7 +85,7 @@ export const useIntegracaoAvancada = () => {
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random()}`);
 
   // Hooks das funcionalidades
-  const recomendacoes = useRecomendacoesIA();
+  const { recomendacoes, perfil: perfilUsuario } = useRecomendacoesIA();
   const simulador = useSimuladorCenarios({
     valorInicial: 10000,
     valorMensal: 1000,
@@ -99,24 +99,23 @@ export const useIntegracaoAvancada = () => {
 
   // Dashboard consolidado
   const dashboardData = useMemo<DashboardData>(() => {
-    const portfolioValue = recomendacoes.perfil?.patrimonioAtual || 0;
+    const portfolioValue = perfilUsuario?.patrimonioLiquido || 0;
     const monthlyReturn = 0; // Valor padrão
-    const riskScore = recomendacoes.perfil?.toleranciaRisco === 'conservador' ? 1 : 
-                     recomendacoes.perfil?.toleranciaRisco === 'moderado' ? 2 : 3;
+    const riskScore = perfilUsuario?.toleranciaRisco || 5;
 
     return {
       portfolioValue,
       monthlyReturn,
       riskScore,
-      recommendations: recomendacoes.recomendacoes,
+      recommendations: recomendacoes,
       scenarios: simulador.resultados,
-      alerts: recomendacoes.alertas,
+      alerts: [], // Alertas não estão disponíveis no hook atual
       performance: performance.metrics,
       themePreferences: temas.temaAtivo
     };
   }, [
-    recomendacoes.recomendacoes,
-    recomendacoes.alertas,
+    recomendacoes,
+    perfilUsuario,
     simulador.resultados,
     performance.metrics,
     temas.temaAtivo
@@ -132,12 +131,12 @@ export const useIntegracaoAvancada = () => {
       const newInsights: PredictiveInsight[] = [];
 
       // Análise de tendência de mercado baseada em dados históricos
-      if (recomendacoes.perfil && simulador.resultados.length > 0) {
+      if (perfilUsuario && simulador.resultados.length > 0) {
         const tendenciaMercado = simulador.resultados.reduce((acc, resultado) => {
           return acc + resultado.valorFinal;
         }, 0) / simulador.resultados.length;
 
-        const portfolioAtual = recomendacoes.perfil.patrimonioAtual;
+        const portfolioAtual = perfilUsuario.patrimonioLiquido;
         const variacao = ((tendenciaMercado - portfolioAtual) / portfolioAtual) * 100;
 
         if (Math.abs(variacao) > 5) {
@@ -160,10 +159,9 @@ export const useIntegracaoAvancada = () => {
       }
 
       // Análise de risco do portfólio
-      if (recomendacoes.perfil) {
-        const riskScoreNum = recomendacoes.perfil.toleranciaRisco === 'conservador' ? 1 : 
-                            recomendacoes.perfil.toleranciaRisco === 'moderado' ? 2 : 3;
-        const portfolioRisk = recomendacoes.analiseRisco?.pontuacaoRisco || 0;
+      if (perfilUsuario) {
+        const riskScoreNum = perfilUsuario.toleranciaRisco;
+        const portfolioRisk = 5; // Valor padrão já que analiseRisco não está disponível
         
         if (Math.abs(riskScoreNum - portfolioRisk) > 20) {
           newInsights.push({
@@ -205,7 +203,7 @@ export const useIntegracaoAvancada = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [config.enablePredictiveAnalysis, recomendacoes.perfil, simulador.resultados, performance.metrics]);
+  }, [config.enablePredictiveAnalysis, perfilUsuario, simulador.resultados, performance.metrics]);
 
   // Notificações inteligentes
   const gerarNotificacaoInteligente = useCallback((

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -23,8 +23,8 @@ import {
   Award,
   Activity
 } from 'lucide-react';
-import { useAppStore } from '../store/useAppStore';
-import { useSimulacao } from '../store/useAppStore';
+import { useDashboardExecutivo } from '../hooks/useDashboardExecutivo';
+import { formatarMoeda, formatarPercentual } from '../utils/dashboardCalculations';
 
 interface DashboardExecutivoProps {
   simulacao?: any;
@@ -62,92 +62,107 @@ interface BenchmarkComparativo {
 }
 
 const DashboardExecutivo: React.FC<DashboardExecutivoProps> = ({ simulacao }) => {
-  const { resultado } = useSimulacao();
+  const {
+    kpis,
+    comparativos: dadosComparativos,
+    alertasExecutivos,
+    loading,
+    atualizarDadosExecutivos: carregarDados,
+    exportarDados: exportarRelatorio,
+    gerarRelatorioPerformance: analisarPerformance
+  } = useDashboardExecutivo();
+  
   const [periodoSelecionado, setPeriodoSelecionado] = useState('12m');
   const [filtroAtivo, setFiltroAtivo] = useState('todos');
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
+
   // Métricas executivas calculadas
   const metricas: MetricaExecutiva[] = useMemo(() => {
-    const valorTotal = resultado?.valorFinal || 100000;
-    const valorInicial = simulacao?.valorInicial || 50000;
-    const rentabilidade = ((valorTotal - valorInicial) / valorInicial) * 100;
+    if (!kpis) return [];
+    
+    const valorTotal = 1250000; // Valor exemplo
+    const valorInicial = 1000000; // Valor exemplo
+    const rentabilidade = kpis.roi || 0;
     
     return [
-      {
-        id: 'patrimonio',
-        titulo: 'Patrimônio Total',
-        valor: valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-        variacao: 12.5,
-        periodo: '12 meses',
-        tipo: 'valor',
-        tendencia: 'alta',
-        meta: 120000,
-        icon: DollarSign,
-        cor: 'green'
-      },
-      {
-        id: 'rentabilidade',
-        titulo: 'Rentabilidade Acumulada',
-        valor: rentabilidade.toFixed(2),
-        variacao: 3.2,
-        periodo: '12 meses',
-        tipo: 'percentual',
-        tendencia: 'alta',
-        meta: 15,
-        icon: TrendingUp,
-        cor: 'blue'
-      },
-      {
-        id: 'risco',
-        titulo: 'Volatilidade da Carteira',
-        valor: 18.5,
-        variacao: -2.1,
-        periodo: '12 meses',
-        tipo: 'percentual',
-        tendencia: 'baixa',
-        meta: 20,
-        icon: Shield,
-        cor: 'orange'
-      },
-      {
-        id: 'sharpe',
-        titulo: 'Índice Sharpe',
-        valor: 1.42,
-        variacao: 0.15,
-        periodo: '12 meses',
-        tipo: 'quantidade',
-        tendencia: 'alta',
-        meta: 1.5,
-        icon: Award,
-        cor: 'purple'
-      },
-      {
-        id: 'diversificacao',
-        titulo: 'Índice de Diversificação',
-        valor: 85,
-        variacao: 5.2,
-        periodo: '12 meses',
-        tipo: 'percentual',
-        tendencia: 'alta',
-        meta: 90,
-        icon: PieChart,
-        cor: 'indigo'
-      },
-      {
-        id: 'liquidez',
-        titulo: 'Liquidez Média',
-        valor: 72,
-        variacao: -1.8,
-        periodo: '12 meses',
-        tipo: 'percentual',
-        tendencia: 'baixa',
-        meta: 80,
-        icon: Activity,
-        cor: 'teal'
-      }
-    ];
-  }, [resultado]);
+        {
+          id: 'patrimonio',
+          titulo: 'Patrimônio Total',
+          valor: formatarMoeda(valorTotal),
+          variacao: 12.5,
+          periodo: '12 meses',
+          tipo: 'valor',
+          tendencia: 'alta',
+          meta: 120000,
+          icon: DollarSign,
+          cor: 'green'
+        },
+        {
+          id: 'rentabilidade',
+          titulo: 'Rentabilidade Acumulada',
+          valor: formatarPercentual(rentabilidade),
+          variacao: 3.2,
+          periodo: '12 meses',
+          tipo: 'percentual',
+          tendencia: rentabilidade > 0 ? 'alta' : 'baixa',
+          meta: 15,
+          icon: TrendingUp,
+          cor: 'blue'
+        },
+        {
+          id: 'risco',
+          titulo: 'Volatilidade da Carteira',
+          valor: `${kpis.volatilidade?.toFixed(1) || '0.0'}%`,
+          variacao: -2.1,
+          periodo: '12 meses',
+          tipo: 'percentual',
+          tendencia: 'baixa',
+          meta: 20,
+          icon: Shield,
+          cor: 'orange'
+        },
+        {
+          id: 'sharpe',
+          titulo: 'Índice Sharpe',
+          valor: kpis.sharpeRatio?.toFixed(2) || '0.00',
+          variacao: 0.15,
+          periodo: '12 meses',
+          tipo: 'quantidade',
+          tendencia: (kpis.sharpeRatio || 0) > 1 ? 'alta' : 'baixa',
+          meta: 1.5,
+          icon: Award,
+          cor: 'purple'
+        },
+        {
+          id: 'diversificacao',
+          titulo: 'Max Drawdown',
+          valor: `${kpis.maxDrawdown?.toFixed(1) || '0.0'}%`,
+          variacao: 5.2,
+          periodo: '12 meses',
+          tipo: 'percentual',
+          tendencia: 'baixa',
+          meta: 10,
+          icon: PieChart,
+          cor: 'indigo'
+        },
+        {
+          id: 'liquidez',
+          titulo: 'Information Ratio',
+          valor: kpis.informationRatio?.toFixed(2) || '0.00',
+          variacao: -1.8,
+          periodo: '12 meses',
+          tipo: 'quantidade',
+          tendencia: 'alta',
+          meta: 1.0,
+          icon: Activity,
+          cor: 'teal'
+        }
+      ];
+   }, [kpis]);
 
   // Análise setorial
   const analiseSetorial: AnaliseSetorial[] = [
@@ -245,14 +260,16 @@ const DashboardExecutivo: React.FC<DashboardExecutivoProps> = ({ simulacao }) =>
     }
   ];
 
-  const handleExportarRelatorio = () => {
+  const handleExportarRelatorio = async () => {
     setIsLoading(true);
-    // Simular exportação
-    setTimeout(() => {
-      setIsLoading(false);
-      // Aqui seria implementada a exportação real
+    try {
+      await exportarRelatorio('pdf');
       alert('Relatório exportado com sucesso!');
-    }, 2000);
+    } catch (error) {
+      alert('Erro ao exportar relatório');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const MetricaCard: React.FC<{ metrica: MetricaExecutiva }> = ({ metrica }) => {

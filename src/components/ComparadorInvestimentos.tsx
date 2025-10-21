@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   GitCompare, 
@@ -15,8 +15,23 @@ import {
   Percent,
   Info,
   Eye,
-  EyeOff
+  EyeOff,
+  LineChart as LineChartIcon,
+  Heart,
+  Star
 } from 'lucide-react';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar, 
+  Legend 
+} from 'recharts';
 import { ComparacaoInvestimento, SimulacaoInput } from '../types';
 import { formatarMoeda, formatarPercentual } from '../utils/calculations';
 import { buscarBancoPorId, buscarModalidadePorId } from '../constants/bancosDigitais';
@@ -31,7 +46,7 @@ interface ComparadorInvestimentosProps {
   melhorInvestimento?: ComparacaoInvestimento | null;
 }
 
-type VisualizacaoTipo = 'lista' | 'tabela' | 'metricas';
+type VisualizacaoTipo = 'lista' | 'tabela' | 'metricas' | 'grafico';
 
 const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
   comparacoes,
@@ -46,6 +61,10 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
   const [nomeComparacao, setNomeComparacao] = useState('');
   const [visualizacao, setVisualizacao] = useState<VisualizacaoTipo>('lista');
   const [mostrarDetalhes, setMostrarDetalhes] = useState<string[]>([]);
+  const [filtroModalidade, setFiltroModalidade] = useState<string>('todas');
+  const [filtroRentabilidade, setFiltroRentabilidade] = useState<{ min: number; max: number }>({ min: 0, max: 100 });
+  const [comparacoesFavoritas, setComparacoesFavoritas] = useState<string[]>([]);
+  const [mostrarApenasFavoritos, setMostrarApenasFavoritos] = useState(false);
 
   // Função para obter o nome da modalidade baseado no tipo de taxa
   const obterNomeModalidade = (simulacao: SimulacaoInput): string => {
@@ -111,12 +130,36 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
     return { valor: diferenca, percentual };
   };
 
-  const obterMetricasComparativas = () => {
-    if (comparacoes.length === 0) return null;
+  // Filtrar comparações
+  const comparacoesFiltradas = useMemo(() => {
+    return comparacoes.filter(comp => {
+      // Filtro por favoritos
+      if (mostrarApenasFavoritos && !comparacoesFavoritas.includes(comp.id)) {
+        return false;
+      }
 
-    const saldosFinais = comparacoes.map(c => c.resultado.saldoFinal);
-    const rentabilidades = comparacoes.map(c => c.resultado.rentabilidadeTotal);
-    const jurosGanhos = comparacoes.map(c => c.resultado.totalJuros);
+      // Filtro por modalidade
+      if (filtroModalidade !== 'todas') {
+        const modalidade = obterNomeModalidade(comp.simulacao);
+        if (modalidade !== filtroModalidade) return false;
+      }
+
+      // Filtro por rentabilidade
+      const rentabilidade = comp.resultado.rentabilidadeTotal;
+      if (rentabilidade < filtroRentabilidade.min || rentabilidade > filtroRentabilidade.max) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [comparacoes, filtroModalidade, filtroRentabilidade, mostrarApenasFavoritos, comparacoesFavoritas]);
+
+  const obterMetricasComparativas = () => {
+    if (comparacoesFiltradas.length === 0) return null;
+
+    const saldosFinais = comparacoesFiltradas.map(c => c.resultado.saldoFinal);
+    const rentabilidades = comparacoesFiltradas.map(c => c.resultado.rentabilidadeTotal);
+    const jurosGanhos = comparacoesFiltradas.map(c => c.resultado.totalJuros);
 
     return {
       maiorSaldo: Math.max(...saldosFinais),
@@ -126,7 +169,7 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
       maiorRentabilidade: Math.max(...rentabilidades),
       menorRentabilidade: Math.min(...rentabilidades),
       totalJurosComparacoes: jurosGanhos.reduce((a, b) => a + b, 0),
-      melhorROI: comparacoes.find(c => c.resultado.saldoFinal === Math.max(...saldosFinais))
+      melhorROI: comparacoesFiltradas.find(c => c.resultado.saldoFinal === Math.max(...saldosFinais))
     };
   };
 
@@ -141,6 +184,49 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
       </div>
     </div>
   );
+
+  const toggleFavorito = (comparacaoId: string) => {
+    setComparacoesFavoritas(prev => 
+      prev.includes(comparacaoId) 
+        ? prev.filter(id => id !== comparacaoId)
+        : [...prev, comparacaoId]
+    );
+  };
+
+  const exportarComparacoes = () => {
+    const dadosExportacao = {
+      dataExportacao: new Date().toISOString(),
+      totalComparacoes: comparacoes.length,
+      melhorInvestimento: melhorInvestimento?.nome,
+      metricas,
+      comparacoes: comparacoes.map(comp => ({
+        nome: comp.nome,
+        modalidade: obterNomeModalidade(comp.simulacao),
+        valorInicial: comp.simulacao.valorInicial,
+        valorMensal: comp.simulacao.valorMensal,
+        periodo: comp.simulacao.periodo,
+        taxa: comp.simulacao.taxaPersonalizada || comp.simulacao.modalidade?.taxaAnual || 0,
+        tipoTaxa: obterTipoTaxaFormatado(comp.simulacao.taxaType),
+        saldoFinal: comp.resultado.saldoFinal,
+        totalInvestido: comp.resultado.totalInvestido,
+        totalJuros: comp.resultado.totalJuros,
+        rentabilidadeTotal: comp.resultado.rentabilidadeTotal,
+        roi: ((comp.resultado.saldoFinal / comp.resultado.totalInvestido - 1) * 100),
+        favorito: comparacoesFavoritas.includes(comp.id)
+      }))
+    };
+
+    const dataStr = JSON.stringify(dadosExportacao, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `comparacao-investimentos-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <motion.div
@@ -190,6 +276,16 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
                 Tabela
               </button>
               <button
+                onClick={() => setVisualizacao('grafico')}
+                className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                  visualizacao === 'grafico'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400'
+                }`}
+              >
+                Gráfico
+              </button>
+              <button
                 onClick={() => setVisualizacao('metricas')}
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
                   visualizacao === 'metricas'
@@ -203,9 +299,9 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
           )}
 
           {/* Botão de Exportar */}
-          {comparacoes.length > 0 && onExportarComparacao && (
+          {comparacoes.length > 0 && (
             <button
-              onClick={onExportarComparacao}
+              onClick={onExportarComparacao || exportarComparacoes}
               className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 rounded-lg transition-colors"
             >
               <Download className="w-4 h-4" />
@@ -285,10 +381,70 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
           </div>
         ) : (
           <>
+            {/* Filtros */}
+             {comparacoes.length > 1 && (
+               <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <div className="flex items-center justify-between mb-3">
+                   <h4 className="font-semibold text-gray-900 dark:text-white">Filtros</h4>
+                   {comparacoesFavoritas.length > 0 && (
+                     <button
+                       onClick={() => setMostrarApenasFavoritos(!mostrarApenasFavoritos)}
+                       className={`flex items-center space-x-2 px-3 py-1 rounded-lg text-sm transition-colors ${
+                         mostrarApenasFavoritos
+                           ? 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                           : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400'
+                       }`}
+                     >
+                       <Heart className={`w-4 h-4 ${mostrarApenasFavoritos ? 'fill-current' : ''}`} />
+                       <span>Apenas Favoritos ({comparacoesFavoritas.length})</span>
+                     </button>
+                   )}
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div>
+                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                       Modalidade
+                     </label>
+                     <select
+                       value={filtroModalidade}
+                       onChange={(e) => setFiltroModalidade(e.target.value)}
+                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                     >
+                       <option value="todas">Todas as modalidades</option>
+                       {Array.from(new Set(comparacoes.map(c => obterNomeModalidade(c.simulacao)))).map(modalidade => (
+                         <option key={modalidade} value={modalidade}>{modalidade}</option>
+                       ))}
+                     </select>
+                   </div>
+                   <div>
+                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                       Rentabilidade (%)
+                     </label>
+                     <div className="flex space-x-2">
+                       <input
+                         type="number"
+                         value={filtroRentabilidade.min}
+                         onChange={(e) => setFiltroRentabilidade(prev => ({ ...prev, min: Number(e.target.value) }))}
+                         placeholder="Mín"
+                         className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                       />
+                       <input
+                         type="number"
+                         value={filtroRentabilidade.max}
+                         onChange={(e) => setFiltroRentabilidade(prev => ({ ...prev, max: Number(e.target.value) }))}
+                         placeholder="Máx"
+                         className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                       />
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             )}
+
             {/* Visualização em Lista */}
             {visualizacao === 'lista' && (
               <div className="space-y-4">
-                {comparacoes.map((comparacao, index) => {
+                {comparacoesFiltradas.map((comparacao, index) => {
                   const diferenca = obterDiferenca(comparacao);
                   const ehMelhor = melhorInvestimento?.id === comparacao.id;
                   const mostrarDetalhe = mostrarDetalhes.includes(comparacao.id);
@@ -326,6 +482,18 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
                         
                         <div className="flex items-center space-x-2">
                           <button
+                            onClick={() => toggleFavorito(comparacao.id)}
+                            className={`p-1 transition-colors ${
+                              comparacoesFavoritas.includes(comparacao.id)
+                                ? 'text-red-500 hover:text-red-600'
+                                : 'text-gray-400 hover:text-red-500'
+                            }`}
+                          >
+                            <Heart className={`w-4 h-4 ${
+                              comparacoesFavoritas.includes(comparacao.id) ? 'fill-current' : ''
+                            }`} />
+                          </button>
+                          <button
                             onClick={() => toggleDetalhes(comparacao.id)}
                             className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
                             title={mostrarDetalhe ? "Ocultar detalhes" : "Mostrar detalhes"}
@@ -348,7 +516,7 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
                             {renderizarTooltip("Valor total acumulado ao final do período")}
                           </div>
                           <p className="font-semibold text-gray-900 dark:text-white">
-                            {formatarMoeda(comparacao.resultado.saldoFinal)}
+                            {formatarMoeda(comparacao.resultado.valorFinal)}
                           </p>
                         </div>
                         
@@ -468,7 +636,7 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
                     </tr>
                   </thead>
                   <tbody>
-                    {comparacoes.map((comparacao, index) => {
+                    {comparacoesFiltradas.map((comparacao, index) => {
                       const ehMelhor = melhorInvestimento?.id === comparacao.id;
                       const roi = ((comparacao.resultado.saldoFinal / comparacao.resultado.totalInvestido - 1) * 100);
                       
@@ -507,18 +675,149 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
                             {roi.toFixed(2)}%
                           </td>
                           <td className="py-3 px-2 text-center">
-                            <button
-                              onClick={() => onRemoverComparacao(comparacao.id)}
-                              className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center justify-center space-x-2">
+                              <button
+                                onClick={() => toggleFavorito(comparacao.id)}
+                                className={`p-1 transition-colors ${
+                                  comparacoesFavoritas.includes(comparacao.id)
+                                    ? 'text-red-500 hover:text-red-600'
+                                    : 'text-gray-400 hover:text-red-500'
+                                }`}
+                              >
+                                <Heart className={`w-4 h-4 ${
+                                  comparacoesFavoritas.includes(comparacao.id) ? 'fill-current' : ''
+                                }`} />
+                              </button>
+                              <button
+                                onClick={() => onRemoverComparacao(comparacao.id)}
+                                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </motion.tr>
                       );
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Visualização em Gráfico */}
+            {visualizacao === 'grafico' && (
+              <div className="space-y-6">
+                {/* Gráfico de Evolução do Saldo */}
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                    <LineChartIcon className="w-5 h-5 text-blue-500" />
+                    <span>Evolução do Saldo Final</span>
+                  </h4>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={comparacoesFiltradas.map(c => ({
+                        nome: c.nome,
+                        saldoFinal: c.resultado.saldoFinal,
+                        totalInvestido: c.resultado.totalInvestido,
+                        totalJuros: c.resultado.totalJuros,
+                        cor: c.cor
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="nome" 
+                          className="text-xs"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis 
+                          className="text-xs"
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => formatarMoeda(value)}
+                        />
+                        <Tooltip 
+                          formatter={(value, name) => [
+                            formatarMoeda(Number(value)), 
+                            name === 'saldoFinal' ? 'Saldo Final' :
+                            name === 'totalInvestido' ? 'Total Investido' : 'Juros Ganhos'
+                          ]}
+                          labelStyle={{ color: '#374151' }}
+                          contentStyle={{ 
+                            backgroundColor: '#f9fafb', 
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Legend />
+                        <Bar 
+                          dataKey="totalInvestido" 
+                          name="Total Investido"
+                          fill="#6b7280" 
+                          radius={[0, 0, 4, 4]}
+                        />
+                        <Bar 
+                          dataKey="totalJuros" 
+                          name="Juros Ganhos"
+                          fill="#10b981" 
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Gráfico de Rentabilidade */}
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                    <Percent className="w-5 h-5 text-purple-500" />
+                    <span>Comparação de Rentabilidade</span>
+                  </h4>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={comparacoesFiltradas.map(c => ({
+                        nome: c.nome,
+                        rentabilidade: c.resultado.rentabilidadeTotal,
+                        roi: ((c.resultado.saldoFinal / c.resultado.totalInvestido - 1) * 100),
+                        cor: c.cor
+                      }))}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="nome" 
+                          className="text-xs"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis 
+                          className="text-xs"
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => `${value.toFixed(1)}%`}
+                        />
+                        <Tooltip 
+                          formatter={(value, name) => [
+                            `${Number(value).toFixed(2)}%`, 
+                            name === 'rentabilidade' ? 'Rentabilidade Total' : 'ROI'
+                          ]}
+                          labelStyle={{ color: '#374151' }}
+                          contentStyle={{ 
+                            backgroundColor: '#f9fafb', 
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Legend />
+                        <Bar 
+                          dataKey="rentabilidade" 
+                          name="Rentabilidade Total"
+                          fill="#8b5cf6" 
+                          radius={[4, 4, 4, 4]}
+                        />
+                        <Bar 
+                          dataKey="roi" 
+                          name="ROI"
+                          fill="#06b6d4" 
+                          radius={[4, 4, 4, 4]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -634,7 +933,7 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
                   </h4>
                   
                   <div className="space-y-3">
-                    {comparacoes
+                    {comparacoesFiltradas
                       .sort((a, b) => b.resultado.saldoFinal - a.resultado.saldoFinal)
                       .map((comparacao, index) => (
                         <div key={comparacao.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -670,7 +969,7 @@ const ComparadorInvestimentos = memo(function ComparadorInvestimentos({
             )}
 
             {/* Resumo da Comparação */}
-            {comparacoes.length > 1 && melhorInvestimento && (
+            {comparacoesFiltradas.length > 1 && melhorInvestimento && (
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}

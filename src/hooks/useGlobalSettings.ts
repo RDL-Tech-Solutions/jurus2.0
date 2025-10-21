@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAccessibility } from './useAccessibility';
+import useAcessibilidade from './useAcessibilidade';
 
 export interface GlobalSettings {
   theme: string;
@@ -38,7 +38,7 @@ export const useGlobalSettings = () => {
   });
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const { settings: accessibilitySettings } = useAccessibility();
+  const { configuracao: accessibilitySettings } = useAcessibilidade();
 
   // Aplicar tema no DOM
   const applyTheme = (theme: string) => {

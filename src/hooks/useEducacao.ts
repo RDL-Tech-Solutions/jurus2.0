@@ -281,10 +281,12 @@ const useEducacao = () => {
     // Registrar atividade
     registrarAtividade({
       tipo: 'tutorial',
+      conteudoId: tutorial.id,
       titulo: tutorial.titulo,
       tempoGasto: tutorial.duracao,
       concluida: true,
-      pontuacao: 50
+      pontuacao: 50,
+      timestamp: Date.now()
     });
 
     // Verificar conquistas
@@ -317,10 +319,12 @@ const useEducacao = () => {
     // Registrar atividade
     registrarAtividade({
       tipo: 'artigo',
+      conteudoId: artigo.id,
       titulo: artigo.titulo,
       tempoGasto: artigo.tempoLeitura,
       concluida: true,
-      pontuacao: 20
+      pontuacao: 20,
+      timestamp: Date.now()
     });
 
     // Atualizar visualizações do artigo
@@ -352,8 +356,9 @@ const useEducacao = () => {
         conquistas: [
           ...prev.conquistas,
           ...novasConquistas.map(id => ({
-            id,
-            desbloqueadaEm: Date.now()
+            conquistaId: id,
+            dataDesbloqueio: Date.now(),
+            contexto: 'Conquista desbloqueada automaticamente'
           }))
         ]
       }));

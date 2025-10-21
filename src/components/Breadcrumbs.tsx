@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Home, MoreHorizontal } from 'lucide-react';
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   label: string;
   path: string;
   icon?: React.ReactNode;

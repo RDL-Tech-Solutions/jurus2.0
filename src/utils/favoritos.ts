@@ -154,7 +154,7 @@ export const compararSimulacoes = (
     nome: `Comparação ${new Date().toLocaleDateString()}`,
     simulacoes,
     criterios: {
-      saldoFinal: true,
+      valorFinal: true,
       rendimentoTotal: true,
       rendimentoMensal: true,
       tempoParaMeta: true,
@@ -167,7 +167,7 @@ export const compararSimulacoes = (
       mostrarGraficos: true,
       mostrarTabela: true,
       mostrarResumo: true,
-      ordenarPor: 'saldoFinal',
+      ordenarPor: 'rendimento',
       ordemCrescente: false
     },
     dataCriacao: new Date(),

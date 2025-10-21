@@ -22,6 +22,9 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getZIndexClass, Z_INDEX } from '../constants/zIndex';
+import { useResponsiveNavigation, useBreakpoint } from '../hooks/useResponsive';
+import { useFocusManagement, useKeyboardNavigation, useAriaAttributes } from '../hooks/useAccessibility';
+import { ComponentErrorBoundary } from './ErrorBoundary';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -58,17 +61,23 @@ const Sidebar: React.FC<SidebarProps> = ({
   onHelpClick
 }) => {
   const [expandedSection, setExpandedSection] = useState<string | null>('Ferramentas');
-  const [isMobile, setIsMobile] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // Responsive hooks
+  const { shouldShowMobileMenu, shouldCollapseSidebar, navigationMode } = useResponsiveNavigation();
+  const { isMobile, isTablet, isDesktop } = useBreakpoint();
+
+  // Accessibility hooks
+  const { trapFocus, pushFocus, popFocus } = useFocusManagement();
+  const { setAriaExpanded, setAriaHidden } = useAriaAttributes();
 
   // Detectar tema escuro
   useEffect(() => {
     const checkDarkMode = () => {
       const isDark = document.documentElement.classList.contains('dark');
       setIsDarkMode(isDark);
-      console.log('🎨 Tema detectado:', isDark ? 'ESCURO' : 'CLARO');
     };
     
     checkDarkMode();
@@ -83,33 +92,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  // Debug da sidebar
-  useEffect(() => {
-    if (isOpen) {
-      console.log('🔧 SIDEBAR DEBUG:', {
-        isOpen,
-        isDarkMode,
-        isMobile,
-        expandedSection,
-        sidebarRef: sidebarRef.current
-      });
-      
-
-    }
-  }, [isOpen, isDarkMode, isMobile, expandedSection]);
-
-  // Detectar se é mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   // Persistir estado da sidebar no localStorage
   useEffect(() => {
     const savedState = localStorage.getItem('sidebar-open');
@@ -121,6 +103,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   useEffect(() => {
     localStorage.setItem('sidebar-open', isOpen.toString());
   }, [isOpen]);
+
+  // Focus management
+  useEffect(() => {
+    if (isOpen && sidebarRef.current) {
+      const cleanup = trapFocus(sidebarRef.current);
+      return cleanup;
+    }
+  }, [isOpen, trapFocus]);
 
   // Fechar sidebar ao clicar fora (apenas em mobile)
   useEffect(() => {
@@ -249,25 +239,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       icon: <FileText className="w-5 h-5" />,
       items: [
         {
-          id: 'relatorios-avancados',
-          title: 'Relatórios Avançados',
-          description: 'Relatórios detalhados e análises',
-          icon: <FileText className="w-4 h-4" />,
-          onClick: () => navigate('/relatorios-avancados'),
-        },
-        {
           id: 'recomendacoes-ia',
           title: 'Recomendações IA',
           description: 'Recomendações inteligentes',
           icon: <Brain className="w-4 h-4" />,
           onClick: () => navigate('/recomendacoes-ia'),
-        },
-        {
-          id: 'simulador-cenarios',
-          title: 'Simulador de Cenários',
-          description: 'Simular diferentes cenários',
-          icon: <Gamepad2 className="w-4 h-4" />,
-          onClick: () => navigate('/simulador-cenarios'),
         }
       ]
     },
@@ -356,343 +332,201 @@ const Sidebar: React.FC<SidebarProps> = ({
     setExpandedSection(expandedSection === sectionTitle ? null : sectionTitle);
   };
 
-  const sidebarVariants: Variants = {
-    open: {
-      x: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 400,
-        damping: 30,
-        duration: 0.3
-      }
-    },
-    closed: {
-      x: '-100%',
-      transition: {
-        type: 'spring',
-        stiffness: 400,
-        damping: 30,
-        duration: 0.3
-      }
-    }
-  };
-
-  const overlayVariants: Variants = {
-    open: {
-      opacity: 1,
-      transition: { 
-        duration: 0.2,
-        ease: 'easeOut'
-      }
-    },
-    closed: {
-      opacity: 0,
-      transition: { 
-        duration: 0.2,
-        ease: 'easeIn'
-      }
-    }
-  };
-
-  const itemVariants: Variants = {
-    open: {
-      opacity: 1,
-      height: 'auto',
-      transition: {
-        duration: 0.2,
-        ease: 'easeOut'
-      }
-    },
-    closed: {
-      opacity: 0,
-      height: 0,
-      transition: {
-        duration: 0.2,
-        ease: 'easeIn'
-      }
-    }
+  // Responsive sidebar width
+  const getSidebarWidth = () => {
+    if (isMobile) return '85vw';
+    if (isTablet) return '300px';
+    return '320px';
   };
 
   return (
-    <>
+    <ComponentErrorBoundary>
       {isOpen && (
         <>
-          {/* Overlay simplificado apenas para mobile */}
+          {/* Overlay para mobile */}
           {isMobile && (
             <div
               onClick={onToggle}
-              style={{
-                position: 'fixed',
-                top: '0',
-                left: '0',
-                right: '0',
-                bottom: '0',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                zIndex: '9998',
-                pointerEvents: 'auto',
-                cursor: 'pointer'
-              }}
+              className="fixed inset-0 bg-black bg-opacity-50 z-[9998]"
+              aria-hidden="true"
             />
           )}
 
           {/* Sidebar */}
           <aside
             ref={sidebarRef}
+            role="navigation"
+            aria-label="Menu de navegação principal"
+            aria-hidden={!isOpen}
+            className={`
+              fixed top-0 left-0 h-screen flex flex-col z-[9999]
+              ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}
+              border-r shadow-2xl
+            `}
             style={{
-              position: 'fixed',
-              top: '0',
-              left: '0',
-              height: '100vh',
-              width: isMobile ? '320px' : '320px',
+              width: getSidebarWidth(),
               maxWidth: isMobile ? '85vw' : 'none',
-              backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              borderRight: isDarkMode ? '1px solid #4b5563' : '1px solid #e5e7eb',
-              display: 'flex',
-              flexDirection: 'column',
-              zIndex: '9999',
-              pointerEvents: 'auto',
-              opacity: '1',
-              overflow: 'hidden'
+              transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
             {/* Header da Sidebar */}
-            <div 
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '16px',
-                borderBottom: isDarkMode ? '1px solid #4b5563' : '1px solid #e5e7eb',
-                backgroundColor: isDarkMode ? '#374151' : '#f9fafb',
-                pointerEvents: 'auto'
-              }}
+            <header 
+              className={`
+                flex items-center justify-between p-4 border-b
+                ${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}
+              `}
             >
               <h2 
-                style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: isDarkMode ? '#ffffff' : '#111827',
-                  margin: '0'
-                }}
+                className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                id="sidebar-title"
               >
                 Menu de Navegação
               </h2>
               <button
                 onClick={onToggle}
                 aria-label="Fechar menu lateral"
-                style={{ 
-                  pointerEvents: 'auto',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'background-color 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = isDarkMode ? '#4b5563' : '#e5e7eb';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
+                className={`
+                  p-2 rounded-lg transition-colors
+                  ${isDarkMode 
+                    ? 'hover:bg-gray-600 text-gray-400 hover:text-white' 
+                    : 'hover:bg-gray-200 text-gray-600 hover:text-gray-900'
+                  }
+                `}
               >
-                <X 
-                  style={{
-                    width: '20px',
-                    height: '20px',
-                    color: isDarkMode ? '#9ca3af' : '#6b7280'
-                  }}
-                />
+                <X className="w-5 h-5" />
               </button>
-            </div>
+            </header>
 
             {/* Conteúdo da Sidebar */}
-            <div 
-              style={{
-                flex: '1',
-                overflowY: 'auto',
-                padding: '16px',
-                pointerEvents: 'auto',
-                backgroundColor: 'transparent'
-              }}
+            <nav 
+              className="flex-1 overflow-y-auto p-4"
+              aria-labelledby="sidebar-title"
             >
               {sections.map((section) => (
-                <div key={section.title} style={{ marginBottom: '8px' }}>
+                <div key={section.title} className="mb-2">
                   {/* Cabeçalho da Seção */}
                   <button
-                      onClick={() => toggleSection(section.title)}
-                      style={{ 
-                        pointerEvents: 'auto',
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '12px',
-                        textAlign: 'left',
-                        borderRadius: '8px',
-                        border: 'none',
-                        backgroundColor: 'transparent',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s ease',
-                        marginBottom: '4px'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = isDarkMode ? '#4b5563' : '#f3f4f6';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
+                    onClick={() => toggleSection(section.title)}
+                    aria-expanded={expandedSection === section.title}
+                    aria-controls={`section-${section.title.replace(/\s+/g, '-').toLowerCase()}`}
+                    className={`
+                      w-full flex items-center justify-between p-3 text-left rounded-lg
+                      transition-colors mb-1
+                      ${isDarkMode 
+                        ? 'hover:bg-gray-700 text-white' 
+                        : 'hover:bg-gray-100 text-gray-900'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
                         {section.icon}
                       </span>
-                      <span style={{ 
-                        fontWeight: '500', 
-                        color: isDarkMode ? '#ffffff' : '#111827' 
-                      }}>
+                      <span className="font-medium">
                         {section.title}
                       </span>
                     </div>
                     <ChevronRight
-                      style={{
-                        width: '16px',
-                        height: '16px',
-                        color: '#9ca3af',
-                        transform: expandedSection === section.title ? 'rotate(90deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.2s ease'
-                      }}
+                      className={`
+                        w-4 h-4 text-gray-400 transition-transform
+                        ${expandedSection === section.title ? 'rotate-90' : 'rotate-0'}
+                      `}
                     />
                   </button>
 
                   {/* Items da Seção */}
-                  {expandedSection === section.title && (
-                    <div style={{ marginLeft: '16px', marginTop: '4px' }}>
-                        {section.items.map((item) => (
-                          <button
-                            key={item.id}
-                            onClick={() => handleItemClick(item.onClick)}
-                            style={{ 
-                              pointerEvents: 'auto',
-                              width: '100%',
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: '12px',
-                              padding: '12px',
-                              borderRadius: '8px',
-                              border: 'none',
-                              backgroundColor: 'transparent',
-                              cursor: 'pointer',
-                              textAlign: 'left',
-                              transition: 'background-color 0.2s ease',
-                              marginBottom: '4px'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = isDarkMode ? '#4b5563' : '#f9fafb';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                            }}
+                  <div
+                    id={`section-${section.title.replace(/\s+/g, '-').toLowerCase()}`}
+                    className={`
+                      ml-4 mt-1 space-y-1 overflow-hidden transition-all duration-200
+                      ${expandedSection === section.title 
+                        ? 'max-h-96 opacity-100' 
+                        : 'max-h-0 opacity-0'
+                      }
+                    `}
+                  >
+                    {section.items.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => handleItemClick(item.onClick)}
+                        className={`
+                          w-full flex items-start gap-3 p-3 rounded-lg text-left
+                          transition-colors
+                          ${isDarkMode 
+                            ? 'hover:bg-gray-700 text-white' 
+                            : 'hover:bg-gray-50 text-gray-900'
+                          }
+                        `}
+                        aria-describedby={`${item.id}-description`}
+                      >
+                        <span className={`
+                          mt-0.5 flex-shrink-0
+                          ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}
+                        `}>
+                          {item.icon}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium truncate">
+                              {item.title}
+                            </p>
+                            {item.shortcut && (
+                              <kbd className={`
+                                text-xs px-2 py-1 rounded ml-2 flex-shrink-0
+                                ${isDarkMode 
+                                  ? 'bg-gray-700 text-gray-300' 
+                                  : 'bg-gray-100 text-gray-600'
+                                }
+                              `}>
+                                {item.shortcut}
+                              </kbd>
+                            )}
+                          </div>
+                          <p 
+                            id={`${item.id}-description`}
+                            className={`
+                              text-xs mt-1 line-clamp-2
+                              ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}
+                            `}
                           >
-                            <span style={{ 
-                              color: isDarkMode ? '#9ca3af' : '#6b7280',
-                              marginTop: '2px',
-                              flexShrink: 0,
-                              width: '16px',
-                              height: '16px'
-                            }}>
-                              {item.icon}
-                            </span>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <p style={{ 
-                                  fontSize: '14px',
-                                  fontWeight: '500',
-                                  color: isDarkMode ? '#ffffff' : '#111827',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap'
-                                }}>
-                                  {item.title}
-                                </p>
-                                {item.shortcut && (
-                                  <span style={{ 
-                                    fontSize: '12px',
-                                    color: isDarkMode ? '#6b7280' : '#9ca3af',
-                                    backgroundColor: isDarkMode ? '#374151' : '#f3f4f6',
-                                    padding: '2px 8px',
-                                    borderRadius: '4px',
-                                    marginLeft: '8px',
-                                    flexShrink: 0
-                                  }}>
-                                    {item.shortcut}
-                                  </span>
-                                )}
-                              </div>
-                              <p style={{ 
-                                fontSize: '12px',
-                                color: isDarkMode ? '#9ca3af' : '#6b7280',
-                                marginTop: '4px',
-                                overflow: 'hidden',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical'
-                              }}>
-                                {item.description}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                            {item.description}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
-            </div>
+            </nav>
 
             {/* Footer da Sidebar */}
-            <div style={{
-                padding: '16px',
-                borderTop: isDarkMode ? '1px solid #4b5563' : '1px solid #e5e7eb',
-                backgroundColor: isDarkMode ? '#1f2937' : '#f9fafb',
-                pointerEvents: 'auto'
-              }}
-            >
-              <div style={{ 
-                fontSize: '12px',
-                color: isDarkMode ? '#9ca3af' : '#6b7280',
-                textAlign: 'center'
-              }}>
+            <footer className={`
+              p-4 border-t text-center
+              ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-gray-50 border-gray-200'}
+            `}>
+              <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 <p>
                   Pressione{' '}
-                  <kbd style={{ 
-                    padding: '2px 6px',
-                    backgroundColor: isDarkMode ? '#374151' : '#e5e7eb',
-                    borderRadius: '4px',
-                    color: isDarkMode ? '#d1d5db' : '#374151',
-                    fontFamily: 'monospace'
-                  }}>
+                  <kbd className={`
+                    px-2 py-1 rounded font-mono
+                    ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}
+                  `}>
                     Ctrl+B
                   </kbd>{' '}
                   para alternar
                 </p>
                 {isMobile && (
-                  <p style={{ 
-                    color: isDarkMode ? '#6b7280' : '#9ca3af',
-                    marginTop: '4px'
-                  }}>
-                    Deslize para a esquerda ou toque fora para fechar
+                  <p className={`mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                    Toque fora para fechar
                   </p>
                 )}
               </div>
-            </div>
+            </footer>
           </aside>
         </>
       )}
-    </>
+    </ComponentErrorBoundary>
   );
 };
 

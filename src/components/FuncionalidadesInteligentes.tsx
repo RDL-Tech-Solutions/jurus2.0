@@ -43,15 +43,17 @@ import {
   Info,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Plus,
+  X
 } from 'lucide-react';
-import { TemaAvancado, ConfiguracaoTema } from '../types/temas';
+import { TemaAvancado, ConfiguracaoTemaAvancada } from '../types/temas';
 import { AnimatedContainer, AnimatedItem } from './AnimatedContainer';
 import { AnimatedButton } from './AnimatedButton';
 
 interface FuncionalidadesInteligentesProps {
-  configuracao: ConfiguracaoTema;
-  onAtualizarConfiguracao: (config: ConfiguracaoTema) => void;
+  configuracao: ConfiguracaoTemaAvancada;
+  onAtualizarConfiguracao: (config: ConfiguracaoTemaAvancada) => void;
   temas: TemaAvancado[];
   temaAtivo: string;
   onMudarTema: (temaId: string) => void;

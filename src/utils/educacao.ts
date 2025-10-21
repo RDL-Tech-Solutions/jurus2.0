@@ -208,55 +208,30 @@ export const tutoriaisCompletos: TutorialInterativo[] = [
     categoria: 'calculadora',
     nivel: 'iniciante',
     duracao: 15,
-    etapas: [
+    passos: [
       {
         id: 'conceito',
         titulo: 'O que são Juros Compostos?',
-        descricao: 'Entenda a diferença entre juros simples e compostos',
-        tipo: 'explicacao',
-        conteudo: {
-          texto: 'Juros compostos são juros calculados sobre o capital inicial acrescido dos juros acumulados dos períodos anteriores. É o famoso "juros sobre juros".'
-        },
-        tempoEstimado: 3,
-        obrigatoria: true
+        conteudo: 'Juros compostos são juros calculados sobre o capital inicial acrescido dos juros acumulados dos períodos anteriores. É o famoso "juros sobre juros". Entenda a diferença entre juros simples e compostos.',
+        tipo: 'texto',
+        ordem: 1,
+        tempoEstimado: 3
       },
       {
         id: 'calculo-pratico',
         titulo: 'Calculando na Prática',
-        descricao: 'Use a calculadora para ver os juros compostos em ação',
-        tipo: 'interacao',
-        conteudo: {
-          interacao: {
-            tipo: 'calculadora',
-            elemento: '#valor-inicial',
-            acao: 'inserir-valor',
-            valorEsperado: 1000,
-            feedback: 'Ótimo! Agora vamos ver como R$ 1.000 cresce ao longo do tempo.'
-          }
-        },
-        tempoEstimado: 5,
-        obrigatoria: true
+        conteudo: 'Use a calculadora para ver os juros compostos em ação. Vamos inserir R$ 1.000 e ver como cresce ao longo do tempo.',
+        tipo: 'interativo',
+        ordem: 2,
+        tempoEstimado: 5
       },
       {
         id: 'quiz-final',
         titulo: 'Teste seus Conhecimentos',
-        descricao: 'Quiz sobre juros compostos',
+        conteudo: 'Quiz sobre juros compostos: Qual a principal vantagem dos juros compostos? Os juros compostos proporcionam crescimento exponencial porque os juros rendem juros.',
         tipo: 'quiz',
-        conteudo: {
-          quiz: {
-            pergunta: 'Qual a principal vantagem dos juros compostos?',
-            opcoes: [
-              { id: 'a', texto: 'Rendimento linear', correta: false },
-              { id: 'b', texto: 'Crescimento exponencial', correta: true },
-              { id: 'c', texto: 'Menor risco', correta: false }
-            ],
-            respostaCorreta: 1,
-            explicacao: 'Os juros compostos proporcionam crescimento exponencial porque os juros rendem juros.',
-            tentativasPermitidas: 3
-          }
-        },
-        tempoEstimado: 2,
-        obrigatoria: true
+        ordem: 3,
+        tempoEstimado: 2
       }
     ],
     prerequisitos: [],
@@ -265,14 +240,10 @@ export const tutoriaisCompletos: TutorialInterativo[] = [
       'Calcular juros compostos na prática',
       'Reconhecer a importância do tempo nos investimentos'
     ],
-    recursos: [
-      {
-        tipo: 'calculadora',
-        titulo: 'Calculadora de Juros Compostos',
-        url: '/calculadora',
-        descricao: 'Use nossa calculadora para simular investimentos'
-      }
-    ]
+    tags: ['juros compostos', 'calculadora', 'investimento'],
+    visualizacoes: 0,
+    avaliacaoMedia: 0,
+    dataPublicacao: Date.now()
   },
   {
     id: 'primeiros-passos-investimento',
@@ -281,38 +252,22 @@ export const tutoriaisCompletos: TutorialInterativo[] = [
     categoria: 'investimentos',
     nivel: 'iniciante',
     duracao: 25,
-    etapas: [
+    passos: [
       {
         id: 'reserva-emergencia',
         titulo: 'Reserva de Emergência',
-        descricao: 'Por que ter uma reserva antes de investir',
-        tipo: 'explicacao',
-        conteudo: {
-          texto: 'A reserva de emergência é fundamental para sua segurança financeira. Deve equivaler a 6-12 meses dos seus gastos mensais.'
-        },
-        tempoEstimado: 5,
-        obrigatoria: true
+        conteudo: 'A reserva de emergência é fundamental para sua segurança financeira. Deve equivaler a 6-12 meses dos seus gastos mensais. Por que ter uma reserva antes de investir?',
+        tipo: 'texto',
+        ordem: 1,
+        tempoEstimado: 5
       },
       {
         id: 'perfil-investidor',
         titulo: 'Descobrindo seu Perfil',
-        descricao: 'Questionário para identificar seu perfil de investidor',
+        conteudo: 'Questionário para identificar seu perfil de investidor: Como você reagiria se seus investimentos perdessem 20% do valor em um mês? A reação equilibrada mostra maturidade para investir.',
         tipo: 'quiz',
-        conteudo: {
-          quiz: {
-            pergunta: 'Como você reagiria se seus investimentos perdessem 20% do valor em um mês?',
-            opcoes: [
-              { id: 'a', texto: 'Venderia tudo imediatamente', correta: false },
-              { id: 'b', texto: 'Ficaria preocupado mas manteria', correta: true },
-              { id: 'c', texto: 'Aproveitaria para comprar mais', correta: false }
-            ],
-            respostaCorreta: 1,
-            explicacao: 'A reação equilibrada mostra maturidade para investir.',
-            tentativasPermitidas: 1
-          }
-        },
-        tempoEstimado: 3,
-        obrigatoria: true
+        ordem: 2,
+        tempoEstimado: 3
       }
     ],
     prerequisitos: [],
@@ -321,7 +276,10 @@ export const tutoriaisCompletos: TutorialInterativo[] = [
       'Descobrir seu perfil de investidor',
       'Conhecer os primeiros investimentos recomendados'
     ],
-    recursos: []
+    tags: ['investimento', 'iniciante', 'reserva emergência'],
+    visualizacoes: 0,
+    avaliacaoMedia: 0,
+    dataPublicacao: Date.now()
   }
 ];
 
@@ -390,12 +348,10 @@ O Tesouro Direto é uma excelente porta de entrada para o mundo dos investimento
     tags: ['tesouro direto', 'renda fixa', 'títulos públicos'],
     autor: 'Equipe Jurus',
     dataPublicacao: Date.now(),
+    ultimaAtualizacao: Date.now(),
     tempoLeitura: 8,
     visualizacoes: 0,
-    curtidas: 0,
-    compartilhamentos: 0,
-    recursos: [],
-    relacionados: ['cdi-vs-selic', 'primeiros-investimentos']
+    avaliacaoMedia: 0
   },
   {
     id: 'diversificacao-portfolio',
@@ -461,12 +417,10 @@ A diversificação adequada é fundamental para o sucesso nos investimentos. Com
     tags: ['diversificação', 'portfólio', 'estratégia'],
     autor: 'Equipe Jurus',
     dataPublicacao: Date.now(),
+    ultimaAtualizacao: Date.now(),
     tempoLeitura: 12,
     visualizacoes: 0,
-    curtidas: 0,
-    compartilhamentos: 0,
-    recursos: [],
-    relacionados: ['alocacao-ativos', 'rebalanceamento']
+    avaliacaoMedia: 0
   }
 ];
 
@@ -477,7 +431,7 @@ export const conquistasCompletas: ConquistaEducativa[] = [
     nome: 'Primeiro Passo',
     descricao: 'Complete seu primeiro tutorial',
     icone: '🎯',
-    categoria: 'tutorial',
+    categoria: 'progresso',
     criterios: [
       {
         tipo: 'tutoriais_completos',
@@ -485,11 +439,7 @@ export const conquistasCompletas: ConquistaEducativa[] = [
         descricao: 'Complete 1 tutorial'
       }
     ],
-    recompensa: {
-      tipo: 'badge',
-      valor: 'primeiro-tutorial',
-      descricao: 'Badge de primeiro tutorial completado'
-    },
+    pontuacao: 50,
     raridade: 'comum'
   },
   {
@@ -497,7 +447,7 @@ export const conquistasCompletas: ConquistaEducativa[] = [
     nome: 'Leitor Iniciante',
     descricao: 'Leia 3 artigos educativos',
     icone: '📚',
-    categoria: 'leitura',
+    categoria: 'conhecimento',
     criterios: [
       {
         tipo: 'artigos_lidos',
@@ -505,11 +455,7 @@ export const conquistasCompletas: ConquistaEducativa[] = [
         descricao: 'Leia 3 artigos'
       }
     ],
-    recompensa: {
-      tipo: 'badge',
-      valor: 'leitor-iniciante',
-      descricao: 'Badge de leitor iniciante'
-    },
+    pontuacao: 75,
     raridade: 'comum'
   },
   {
@@ -517,7 +463,7 @@ export const conquistasCompletas: ConquistaEducativa[] = [
     nome: 'Estudioso',
     descricao: 'Acumule 60 minutos de estudo',
     icone: '⏰',
-    categoria: 'pratica',
+    categoria: 'dedicacao',
     criterios: [
       {
         tipo: 'tempo_estudo',
@@ -525,11 +471,7 @@ export const conquistasCompletas: ConquistaEducativa[] = [
         descricao: 'Estude por 60 minutos'
       }
     ],
-    recompensa: {
-      tipo: 'badge',
-      valor: 'estudioso',
-      descricao: 'Badge de estudioso'
-    },
+    pontuacao: 100,
     raridade: 'raro'
   },
   {
@@ -545,16 +487,12 @@ export const conquistasCompletas: ConquistaEducativa[] = [
         descricao: 'Complete 3 tutoriais'
       },
       {
-        tipo: 'pontuacao',
+        tipo: 'pontuacao_total',
         valor: 200,
         descricao: 'Alcance 200 pontos'
       }
     ],
-    recompensa: {
-      tipo: 'titulo',
-      valor: 'Expert em Juros Compostos',
-      descricao: 'Título de especialista'
-    },
+    pontuacao: 200,
     raridade: 'epico'
   },
   {
@@ -580,11 +518,7 @@ export const conquistasCompletas: ConquistaEducativa[] = [
         descricao: 'Estude por 300 minutos'
       }
     ],
-    recompensa: {
-      tipo: 'titulo',
-      valor: 'Mestre da Educação Financeira',
-      descricao: 'Título máximo de educação'
-    },
+    pontuacao: 500,
     raridade: 'lendario'
   }
 ];
@@ -696,7 +630,8 @@ export const gerarRecomendacoesPersonalizadas = (
       relevancia: 0.9,
       categoria: tutorial.categoria,
       nivel: tutorial.nivel,
-      tempoEstimado: tutorial.duracao
+      tempoEstimado: tutorial.duracao,
+      prioridade: Math.round(0.9 * 10)
     });
   });
 
@@ -719,7 +654,8 @@ export const gerarRecomendacoesPersonalizadas = (
       relevancia: 0.8,
       categoria: artigo.categoria,
       nivel: artigo.nivel,
-      tempoEstimado: artigo.tempoLeitura
+      tempoEstimado: artigo.tempoLeitura,
+      prioridade: Math.round(0.8 * 10)
     });
   });
 
@@ -731,11 +667,12 @@ export const gerarRecomendacoesPersonalizadas = (
         id: tutorialBasico.id,
         tipo: 'tutorial',
         titulo: tutorialBasico.titulo,
-        motivo: 'Perfeito para começar',
-        relevancia: 1.0,
+        motivo: 'Tutorial básico recomendado para iniciantes',
+        relevancia: 0.9,
         categoria: tutorialBasico.categoria,
         nivel: tutorialBasico.nivel,
-        tempoEstimado: tutorialBasico.duracao
+        tempoEstimado: tutorialBasico.duracao,
+        prioridade: Math.round(0.9 * 10)
       });
     }
   }

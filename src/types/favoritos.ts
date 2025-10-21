@@ -40,7 +40,7 @@ export interface ComparacaoSimulacoes {
   descricao?: string;
   simulacoes: SimulacaoFavorita[];
   criterios: {
-    saldoFinal: boolean;
+    valorFinal: boolean;
     rendimentoTotal: boolean;
     rendimentoMensal: boolean;
     tempoParaMeta: boolean;
@@ -53,7 +53,7 @@ export interface ComparacaoSimulacoes {
     mostrarGraficos: boolean;
     mostrarTabela: boolean;
     mostrarResumo: boolean;
-    ordenarPor: 'saldoFinal' | 'rendimento' | 'tempo' | 'risco';
+    ordenarPor: 'valorFinal' | 'rendimento' | 'tempo' | 'risco';
     ordemCrescente: boolean;
   };
   dataCriacao: Date;

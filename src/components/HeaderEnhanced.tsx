@@ -54,11 +54,7 @@ function HeaderEnhanced() {
     { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: BarChart3 },
     { id: 'dashboard-executivo', label: 'Dashboard Executivo', path: '/dashboard-executivo', icon: TrendingUp },
     { id: 'dashboard-avancado', label: 'Dashboard Avançado', path: '/dashboard-executivo-avancado', icon: BarChart3 },
-    { id: 'calculadora', label: 'Calculadora', path: '/calculadora', icon: Calculator },
-    { id: 'relatorios', label: 'Relatórios', path: '/relatorios', icon: FileText },
-    { id: 'relatorios-avancados', label: 'Relatórios Avançados', path: '/relatorios-avancados', icon: FileText },
     { id: 'recomendacoes-ia', label: 'Recomendações IA', path: '/recomendacoes-ia', icon: Brain },
-    { id: 'simulador', label: 'Simulador', path: '/simulador-cenarios', icon: Gamepad2 },
     { id: 'temas', label: 'Temas', path: '/sistema-temas', icon: Palette },
     { id: 'educacao', label: 'Educação', path: '/sistema-educacao', icon: GraduationCap }
   ];

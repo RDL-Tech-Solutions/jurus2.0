@@ -26,6 +26,9 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useRecomendacoesIA, RecomendacaoIA, AlertaInteligente, AnaliseRiscoIA } from '../hooks/useRecomendacoesIA';
+import DashboardIA from './DashboardIA';
+import AnalisePreditiva from './AnalisePreditiva';
+import RecomendacoesList from './RecomendacoesList';
 
 interface RecomendacoesIAProps {
   className?: string;
@@ -65,6 +68,9 @@ const RecomendacoesIA: React.FC<RecomendacoesIAProps> = ({ className = '' }) => 
 
   const [activeTab, setActiveTab] = useState<'recomendacoes' | 'alertas' | 'perfil' | 'analise' | 'configuracoes'>('recomendacoes');
   const [showPerfilForm, setShowPerfilForm] = useState(false);
+  const [modoVisualizacao, setModoVisualizacao] = useState<'cards' | 'lista' | 'timeline'>('cards');
+  const [filtroRecomendacoes, setFiltroRecomendacoes] = useState<'todas' | 'investimento' | 'rebalanceamento' | 'diversificacao' | 'alerta'>('todas');
+  const [confiancaMinima, setConfiancaMinima] = useState(70);
 
   // Gerar recomendações automaticamente quando o perfil estiver configurado
   useEffect(() => {
@@ -107,7 +113,7 @@ const RecomendacoesIA: React.FC<RecomendacoesIAProps> = ({ className = '' }) => 
               <div className="text-right">
                 <div className="text-sm text-purple-100">Perfil: {perfil.nome}</div>
                 <div className="text-xs text-purple-200">
-                  Risco: {perfil.toleranciaRisco} | Experiência: {perfil.experienciaInvestimentos}
+                  Risco: {perfil.toleranciaRisco} | Experiência: {perfil.experiencia}
                 </div>
               </div>
             )}
@@ -159,15 +165,50 @@ const RecomendacoesIA: React.FC<RecomendacoesIAProps> = ({ className = '' }) => 
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                     Recomendações Personalizadas
                   </h3>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={gerarRecomendacoes}
-                      disabled={isLoading || !perfil}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={filtroRecomendacoes}
+                      onChange={(e) => setFiltroRecomendacoes(e.target.value as 'todas' | 'investimento' | 'rebalanceamento' | 'diversificacao' | 'alerta')}
+                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700"
                     >
-                      <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                      {isLoading ? 'Gerando...' : 'Atualizar'}
-                    </button>
+                      <option value="todas">Todas</option>
+                      <option value="investimento">Investimento</option>
+                      <option value="rebalanceamento">Rebalanceamento</option>
+                      <option value="diversificacao">Diversificação</option>
+                      <option value="alerta">Alertas</option>
+                    </select>
+                    <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                      <button
+                        onClick={() => setModoVisualizacao('cards')}
+                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                          modoVisualizacao === 'cards'
+                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        Cards
+                      </button>
+                      <button
+                        onClick={() => setModoVisualizacao('lista')}
+                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                          modoVisualizacao === 'lista'
+                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        Lista
+                      </button>
+                      <button
+                        onClick={() => setModoVisualizacao('timeline')}
+                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                          modoVisualizacao === 'timeline'
+                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        Timeline
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -190,31 +231,21 @@ const RecomendacoesIA: React.FC<RecomendacoesIAProps> = ({ className = '' }) => 
                       Configurar Perfil
                     </button>
                   </div>
-                ) : recomendacoes.length === 0 ? (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-                    <Lightbulb className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Nenhuma recomendação disponível
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Clique em "Atualizar" para gerar novas recomendações baseadas no seu perfil.
-                    </p>
-                  </div>
                 ) : (
-                  <div className="grid gap-4">
-                    {recomendacoes.map((recomendacao) => (
-                      <RecomendacaoCard
-                        key={recomendacao.id}
-                        recomendacao={recomendacao}
-                        onAceitar={() => aceitarRecomendacao(recomendacao.id)}
-                        onRejeitar={() => rejeitarRecomendacao(recomendacao.id)}
-                      />
-                    ))}
-                  </div>
+                  <RecomendacoesList
+                    recomendacoes={recomendacoes.filter(r => 
+                      filtroRecomendacoes === 'todas' || r.tipo === filtroRecomendacoes
+                    )}
+                    modoVisualizacao={modoVisualizacao}
+                    onAceitar={aceitarRecomendacao}
+                    onRejeitar={rejeitarRecomendacao}
+                    confiancaMinima={confiancaMinima}
+                  />
                 )}
               </motion.div>
             )}
 
+            {/* Outras abas permanecem iguais */}
             {activeTab === 'alertas' && (
               <motion.div
                 key="alertas"
@@ -375,10 +406,9 @@ const RecomendacaoCard: React.FC<{
   onAceitar: () => void;
   onRejeitar: () => void;
 }> = ({ recomendacao, onAceitar, onRejeitar }) => {
-  const getUrgenciaColor = (urgencia: string) => {
-    switch (urgencia) {
-      case 'critica': return 'text-red-600';
-      case 'alta': return 'text-orange-600';
+  const getPrioridadeColor = (prioridade: string) => {
+    switch (prioridade) {
+      case 'alta': return 'text-red-600';
       case 'media': return 'text-yellow-600';
       case 'baixa': return 'text-green-600';
       default: return 'text-gray-600';
@@ -401,9 +431,8 @@ const RecomendacaoCard: React.FC<{
           <div className="p-2 bg-blue-100 rounded-lg">
             {recomendacao.tipo === 'investimento' && <TrendingUp className="w-5 h-5 text-blue-600" />}
             {recomendacao.tipo === 'rebalanceamento' && <BarChart3 className="w-5 h-5 text-blue-600" />}
-            {recomendacao.tipo === 'resgate' && <DollarSign className="w-5 h-5 text-blue-600" />}
-            {recomendacao.tipo === 'diversificacao' && <Shield className="w-5 h-5 text-blue-600" />}
-            {recomendacao.tipo === 'alerta' && <AlertTriangle className="w-5 h-5 text-blue-600" />}
+            {recomendacao.tipo === 'otimizacao' && <DollarSign className="w-5 h-5 text-blue-600" />}
+            {recomendacao.tipo === 'risco' && <AlertTriangle className="w-5 h-5 text-blue-600" />}
           </div>
           <div>
             <h3 className="font-bold text-gray-900 dark:text-white">
@@ -434,10 +463,10 @@ const RecomendacaoCard: React.FC<{
           <div className="text-xs text-gray-500">Impacto</div>
         </div>
         <div className="text-center">
-          <div className={`text-lg font-semibold ${getUrgenciaColor(recomendacao.urgencia)}`}>
-            {recomendacao.urgencia}
+          <div className={`text-lg font-semibold ${getPrioridadeColor(recomendacao.prioridade)}`}>
+            {recomendacao.prioridade}
           </div>
-          <div className="text-xs text-gray-500">Urgência</div>
+          <div className="text-xs text-gray-500">Prioridade</div>
         </div>
         <div className="text-center">
           <div className="text-lg font-semibold text-gray-600">
@@ -449,11 +478,13 @@ const RecomendacaoCard: React.FC<{
 
       <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-4">
         <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">
-          Justificativa
+          Fundamentação
         </h4>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          {recomendacao.justificativa}
-        </p>
+        <div className="text-sm text-gray-700 dark:text-gray-300">
+          {recomendacao.fundamentacao.map((item, index) => (
+            <p key={index} className="mb-1">• {item}</p>
+          ))}
+        </div>
       </div>
 
       <div className="flex items-center justify-between">
@@ -461,7 +492,7 @@ const RecomendacaoCard: React.FC<{
           Gerada em: {new Date(recomendacao.dataGeracao).toLocaleDateString()}
         </div>
 
-        {recomendacao.status === 'nova' && (
+        {recomendacao.status === 'pendente' && (
           <div className="flex gap-2">
             <button
               onClick={onRejeitar}
@@ -480,16 +511,18 @@ const RecomendacaoCard: React.FC<{
           </div>
         )}
 
-        {recomendacao.status !== 'nova' && (
+        {recomendacao.status !== 'pendente' && (
           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-            recomendacao.status === 'aceita' ? 'bg-green-100 text-green-800' :
+            recomendacao.status === 'implementada' ? 'bg-green-100 text-green-800' :
             recomendacao.status === 'rejeitada' ? 'bg-red-100 text-red-800' :
+            recomendacao.status === 'expirada' ? 'bg-gray-100 text-gray-800' :
             'bg-gray-100 text-gray-800'
           }`}>
-            {recomendacao.status === 'aceita' && <CheckCircle className="w-3 h-3" />}
+            {recomendacao.status === 'implementada' && <CheckCircle className="w-3 h-3" />}
             {recomendacao.status === 'rejeitada' && <X className="w-3 h-3" />}
-            {recomendacao.status === 'aceita' ? 'Aceita' :
+            {recomendacao.status === 'implementada' ? 'Implementada' :
              recomendacao.status === 'rejeitada' ? 'Rejeitada' :
+             recomendacao.status === 'expirada' ? 'Expirada' :
              recomendacao.status}
           </span>
         )}
@@ -523,7 +556,6 @@ const AlertaCard: React.FC<{
           <div className={`p-2 rounded-lg ${getSeveridadeColor(alerta.severidade)}`}>
             {alerta.tipo === 'mercado' && <Activity className="w-5 h-5" />}
             {alerta.tipo === 'portfolio' && <PieChart className="w-5 h-5" />}
-            {alerta.tipo === 'objetivo' && <Target className="w-5 h-5" />}
             {alerta.tipo === 'risco' && <AlertTriangle className="w-5 h-5" />}
             {alerta.tipo === 'oportunidade' && <TrendingUp className="w-5 h-5" />}
           </div>
@@ -550,16 +582,16 @@ const AlertaCard: React.FC<{
       </div>
 
       <p className="text-gray-700 dark:text-gray-300 mb-4">
-        {alerta.mensagem}
+        {alerta.descricao}
       </p>
 
-      {Object.keys(alerta.dadosRelevantes).length > 0 && (
+      {Object.keys(alerta.parametros).length > 0 && (
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-4">
           <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">
-            Dados Relevantes
+            Parâmetros
           </h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            {Object.entries(alerta.dadosRelevantes).map(([key, value]) => (
+            {Object.entries(alerta.parametros).map(([key, value]) => (
               <div key={key}>
                 <span className="text-gray-600 dark:text-gray-400">
                   {key.replace('_', ' ')}:
@@ -573,16 +605,14 @@ const AlertaCard: React.FC<{
         </div>
       )}
 
-      {alerta.acoesSugeridas.length > 0 && (
+      {alerta.acaoRecomendada && (
         <div className="mb-4">
           <h4 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm">
-            Ações Sugeridas
+            Ação Recomendada
           </h4>
-          <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
-            {alerta.acoesSugeridas.map((acao, index) => (
-              <li key={index}>{acao}</li>
-            ))}
-          </ul>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            {alerta.acaoRecomendada}
+          </p>
         </div>
       )}
 
@@ -664,12 +694,9 @@ const PerfilDisplay: React.FC<{
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Experiência:</span>
-              <span className="font-medium capitalize">{perfil.experienciaInvestimentos}</span>
+              <span className="font-medium capitalize">{perfil.experiencia}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Situação Familiar:</span>
-              <span className="font-medium capitalize">{perfil.situacaoFamiliar}</span>
-            </div>
+
           </div>
         </div>
       </div>
@@ -708,13 +735,11 @@ const PerfilDisplay: React.FC<{
 const AnaliseRiscoDisplay: React.FC<{
   analise: AnaliseRiscoIA;
 }> = ({ analise }) => {
-  const getRiscoColor = (classificacao: string) => {
-    switch (classificacao) {
-      case 'muito_baixo': return 'text-green-600';
-      case 'baixo': return 'text-green-500';
-      case 'medio': return 'text-yellow-600';
-      case 'alto': return 'text-orange-600';
-      case 'muito_alto': return 'text-red-600';
+  const getRiscoColor = (categoria: string) => {
+    switch (categoria) {
+      case 'conservador': return 'text-green-600';
+      case 'moderado': return 'text-yellow-600';
+      case 'agressivo': return 'text-red-600';
       default: return 'text-gray-600';
     }
   };
@@ -729,25 +754,25 @@ const AnaliseRiscoDisplay: React.FC<{
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="text-center">
-            <div className={`text-3xl font-bold ${getRiscoColor(analise.classificacao)}`}>
-              {analise.pontuacaoRisco.toFixed(0)}
+            <div className={`text-3xl font-bold ${getRiscoColor(analise.categoria)}`}>
+              {analise.nivelRisco.toFixed(0)}
             </div>
-            <div className="text-sm text-gray-500">Pontuação de Risco</div>
-            <div className={`text-sm font-medium ${getRiscoColor(analise.classificacao)}`}>
-              {analise.classificacao.replace('_', ' ').toUpperCase()}
+            <div className="text-sm text-gray-500">Nível de Risco</div>
+            <div className={`text-sm font-medium ${getRiscoColor(analise.categoria)}`}>
+              {analise.categoria.toUpperCase()}
             </div>
           </div>
           
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600">
-              {analise.diversificacaoAtual.toFixed(0)}%
+              {analise.fatoresRisco.concentracao.toFixed(0)}%
             </div>
-            <div className="text-sm text-gray-500">Diversificação</div>
+            <div className="text-sm text-gray-500">Concentração</div>
           </div>
           
           <div className="text-center">
             <div className="text-3xl font-bold text-purple-600">
-              {(analise.volatilidade * 100).toFixed(1)}%
+              {analise.fatoresRisco.volatilidade.toFixed(0)}%
             </div>
             <div className="text-sm text-gray-500">Volatilidade</div>
           </div>
@@ -756,36 +781,38 @@ const AnaliseRiscoDisplay: React.FC<{
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Métricas de Risco
+              Fatores de Risco
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Probabilidade de Perda:</span>
-                <span className="font-medium">{analise.probabilidadePerda.toFixed(1)}%</span>
+                <span className="text-gray-600 dark:text-gray-400">Concentração:</span>
+                <span className="font-medium">{analise.fatoresRisco.concentracao.toFixed(0)}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Perda Máxima Estimada:</span>
-                <span className="font-medium">
-                  R$ {analise.perdaMaximaEstimada.toLocaleString('pt-BR')}
-                </span>
+                <span className="text-gray-600 dark:text-gray-400">Volatilidade:</span>
+                <span className="font-medium">{analise.fatoresRisco.volatilidade.toFixed(0)}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Correlação entre Ativos:</span>
-                <span className="font-medium">{(analise.correlacaoAtivos * 100).toFixed(0)}%</span>
+                <span className="text-gray-600 dark:text-gray-400">Liquidez:</span>
+                <span className="font-medium">{analise.fatoresRisco.liquidez.toFixed(0)}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Sharpe Ratio:</span>
-                <span className="font-medium">{analise.sharpeRatio.toFixed(2)}</span>
+                <span className="text-gray-600 dark:text-gray-400">Crédito:</span>
+                <span className="font-medium">{analise.fatoresRisco.credito.toFixed(0)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Mercado:</span>
+                <span className="font-medium">{analise.fatoresRisco.mercado.toFixed(0)}%</span>
               </div>
             </div>
           </div>
 
           <div>
             <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-              Recomendações de Mitigação
+              Recomendações
             </h4>
             <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
-              {analise.recomendacoesMitigacao.map((recomendacao, index) => (
+              {analise.recomendacoes.map((recomendacao, index) => (
                 <li key={index}>{recomendacao}</li>
               ))}
             </ul>
@@ -793,40 +820,32 @@ const AnaliseRiscoDisplay: React.FC<{
         </div>
       </div>
 
-      {/* Fatores de Risco */}
+      {/* Informações Adicionais */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-          Fatores de Risco Identificados
+          Informações da Análise
         </h3>
         
-        <div className="space-y-4">
-          {analise.fatoresRisco.map((fator, index) => (
-            <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-semibold text-gray-900 dark:text-white">
-                  {fator.nome}
-                </h4>
-                <div className="flex gap-2">
-                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
-                    Impacto: {fator.impacto}
-                  </span>
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
-                    Peso: {(fator.peso * 100).toFixed(0)}%
-                  </span>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+              Detalhes
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Data da Análise:</span>
+                <span className="font-medium">{analise.dataAnalise.toLocaleDateString('pt-BR')}</span>
               </div>
-              
-              <p className="text-gray-700 dark:text-gray-300 text-sm mb-3">
-                {fator.descricao}
-              </p>
-              
-              <div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">
-                  {fator.descricao}
-                </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Confiança:</span>
+                <span className="font-medium">{analise.confianca.toFixed(0)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Portfolio ID:</span>
+                <span className="font-medium">{analise.portfolioId}</span>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
@@ -997,13 +1016,13 @@ const PerfilForm: React.FC<{
   const [formData, setFormData] = useState({
     nome: perfil?.nome || '',
     idade: perfil?.idade || 30,
-    rendaMensal: perfil?.rendaMensal || 5000,
-    patrimonioAtual: perfil?.patrimonioAtual || 50000,
-    toleranciaRisco: perfil?.toleranciaRisco || 'moderado' as const,
+    rendaAtual: perfil?.rendaAtual || 5000,
+    patrimonioLiquido: perfil?.patrimonioLiquido || 50000,
+    toleranciaRisco: perfil?.toleranciaRisco || 5,
     horizonteTemporal: perfil?.horizonteTemporal || 5,
-    experienciaInvestimentos: perfil?.experienciaInvestimentos || 'intermediario' as const,
-    situacaoFamiliar: perfil?.situacaoFamiliar || 'solteiro' as const,
-    preferenciasInvestimento: perfil?.preferenciasInvestimento || []
+    experiencia: perfil?.experiencia || 'intermediario' as const,
+    preferenciasInvestimento: perfil?.preferenciasInvestimento || [],
+    restricoes: perfil?.restricoes || []
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1053,12 +1072,12 @@ const PerfilForm: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Renda Mensal (R$)
+              Renda Atual (R$)
             </label>
             <input
               type="number"
-              value={formData.rendaMensal}
-              onChange={(e) => setFormData(prev => ({ ...prev, rendaMensal: Number(e.target.value) }))}
+              value={formData.rendaAtual}
+              onChange={(e) => setFormData(prev => ({ ...prev, rendaAtual: Number(e.target.value) }))}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               min="0"
               required
@@ -1067,12 +1086,12 @@ const PerfilForm: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Patrimônio Atual (R$)
+              Patrimônio Líquido (R$)
             </label>
             <input
               type="number"
-              value={formData.patrimonioAtual}
-              onChange={(e) => setFormData(prev => ({ ...prev, patrimonioAtual: Number(e.target.value) }))}
+              value={formData.patrimonioLiquido}
+              onChange={(e) => setFormData(prev => ({ ...prev, patrimonioLiquido: Number(e.target.value) }))}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               min="0"
             />
@@ -1080,17 +1099,16 @@ const PerfilForm: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tolerância ao Risco
+              Tolerância ao Risco (1-10)
             </label>
-            <select
+            <input
+              type="number"
               value={formData.toleranciaRisco}
-              onChange={(e) => setFormData(prev => ({ ...prev, toleranciaRisco: e.target.value as any }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, toleranciaRisco: Number(e.target.value) }))}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="conservador">Conservador</option>
-              <option value="moderado">Moderado</option>
-              <option value="arrojado">Arrojado</option>
-            </select>
+              min="1"
+              max="10"
+            />
           </div>
 
           <div>
@@ -1112,8 +1130,8 @@ const PerfilForm: React.FC<{
               Experiência
             </label>
             <select
-              value={formData.experienciaInvestimentos}
-              onChange={(e) => setFormData(prev => ({ ...prev, experienciaInvestimentos: e.target.value as any }))}
+              value={formData.experiencia}
+              onChange={(e) => setFormData(prev => ({ ...prev, experiencia: e.target.value as any }))}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="iniciante">Iniciante</option>
@@ -1122,21 +1140,7 @@ const PerfilForm: React.FC<{
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Situação Familiar
-            </label>
-            <select
-              value={formData.situacaoFamiliar}
-              onChange={(e) => setFormData(prev => ({ ...prev, situacaoFamiliar: e.target.value as any }))}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="solteiro">Solteiro</option>
-              <option value="casado">Casado</option>
-              <option value="filhos">Com Filhos</option>
-              <option value="aposentado">Aposentado</option>
-            </select>
-          </div>
+
         </div>
 
         <div className="flex gap-3 pt-4">
@@ -1160,3 +1164,150 @@ const PerfilForm: React.FC<{
 };
 
 export default RecomendacoesIA;
+
+// Funções auxiliares para gerar dados simulados
+function gerarDadosPreditivos() {
+  const hoje = new Date();
+  const evolucaoPerformance = [];
+  const previsoes = [];
+  const distribuicaoProbabilidades = [
+    { cenario: 'Muito Pessimista', probabilidade: 5 },
+    { cenario: 'Pessimista', probabilidade: 15 },
+    { cenario: 'Neutro', probabilidade: 60 },
+    { cenario: 'Otimista', probabilidade: 15 },
+    { cenario: 'Muito Otimista', probabilidade: 5 }
+  ];
+
+  // Gerar dados históricos e previsões
+  for (let i = -30; i <= 90; i++) {
+    const data = new Date(hoje);
+    data.setDate(data.getDate() + i);
+    const dataStr = data.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' });
+
+    if (i <= 0) {
+      // Dados históricos
+      evolucaoPerformance.push({
+        data: dataStr,
+        performance: Math.random() * 0.2 - 0.1 + (i * 0.001),
+        benchmark: Math.random() * 0.15 - 0.075 + (i * 0.0008)
+      });
+    } else {
+      // Previsões futuras
+      const tendencia = 0.08 / 365 * i; // 8% ao ano
+      const volatilidade = Math.random() * 0.02 - 0.01;
+      previsoes.push({
+        data: dataStr,
+        historico: i === 1 ? evolucaoPerformance[evolucaoPerformance.length - 1].performance : null,
+        previsao: tendencia + volatilidade,
+        confiancaSuperior: tendencia + volatilidade + 0.02,
+        confiancaInferior: tendencia + volatilidade - 0.02
+      });
+    }
+  }
+
+  // Dados de correlações
+  const correlacoes = [
+    { x: 0.8, y: 0.6, ativo1: 'PETR4', ativo2: 'VALE3' },
+    { x: 0.3, y: 0.9, ativo1: 'ITUB4', ativo2: 'BBDC4' },
+    { x: 0.1, y: 0.2, ativo1: 'MGLU3', ativo2: 'PETR4' },
+    { x: 0.7, y: 0.4, ativo1: 'VALE3', ativo2: 'CSNA3' }
+  ];
+
+  const correlacoesSig = [
+    { par: 'PETR4 x VALE3', valor: 0.85, significancia: 'Alta correlação positiva' },
+    { par: 'ITUB4 x BBDC4', valor: 0.92, significancia: 'Muito alta correlação' },
+    { par: 'MGLU3 x PETR4', valor: 0.15, significancia: 'Baixa correlação' }
+  ];
+
+  // Simulação Monte Carlo
+  const monteCarlo = [];
+  for (let i = 0; i < 100; i++) {
+    monteCarlo.push({
+      simulacao: i + 1,
+      p5: Math.random() * 0.1 - 0.15,
+      p25: Math.random() * 0.1 - 0.05,
+      p50: Math.random() * 0.1 + 0.02,
+      p75: Math.random() * 0.1 + 0.08,
+      p95: Math.random() * 0.1 + 0.15
+    });
+  }
+
+  const distribuicaoRecomendacoes = [
+    { nome: 'Investimento', valor: 35 },
+    { nome: 'Rebalanceamento', valor: 25 },
+    { nome: 'Diversificação', valor: 20 },
+    { nome: 'Alertas', valor: 15 },
+    { nome: 'Outros', valor: 5 }
+  ];
+
+  return {
+    evolucaoPerformance,
+    previsoes,
+    distribuicaoProbabilidades,
+    correlacoes,
+    correlacoesSig,
+    monteCarlo,
+    distribuicaoRecomendacoes,
+    metricas: {
+      acuracia: 87.3,
+      precisao: 92.1,
+      recall: 89.7,
+      f1Score: 90.8
+    },
+    estatisticasMC: {
+      retornoMedio: 0.08,
+      volatilidade: 0.15,
+      var95: -0.12,
+      probPositiva: 73
+    }
+  };
+}
+
+function gerarInsightsML() {
+  return [
+    {
+      titulo: 'Oportunidade de Rebalanceamento',
+      descricao: 'Modelo detectou desbalanceamento na carteira. Recomenda-se ajustar alocação em renda fixa.',
+      tipo: 'oportunidade',
+      confianca: 89,
+      impacto: 'medio'
+    },
+    {
+      titulo: 'Risco de Concentração',
+      descricao: 'Alta concentração em setor de tecnologia pode aumentar volatilidade da carteira.',
+      tipo: 'risco',
+      confianca: 94,
+      impacto: 'alto'
+    },
+    {
+      titulo: 'Tendência de Alta',
+      descricao: 'Algoritmo identifica padrão de alta para os próximos 30 dias com base em indicadores técnicos.',
+      tipo: 'oportunidade',
+      confianca: 76,
+      impacto: 'medio'
+    },
+    {
+      titulo: 'Correlação Elevada',
+      descricao: 'Ativos PETR4 e VALE3 apresentam correlação muito alta, reduzindo diversificação.',
+      tipo: 'risco',
+      confianca: 91,
+      impacto: 'medio'
+    },
+    {
+      titulo: 'Momento Favorável',
+      descricao: 'Condições macroeconômicas favoráveis para investimentos em renda variável.',
+      tipo: 'neutro',
+      confianca: 82,
+      impacto: 'baixo'
+    }
+  ];
+}
+
+function calcularMetricsPerformance() {
+  return {
+    scoreIA: 87,
+    retornoPrevisto: 0.12,
+    confiancaMedia: 85,
+    riscoCalculado: 'Médio'
+  };
+}

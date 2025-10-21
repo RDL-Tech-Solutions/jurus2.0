@@ -22,7 +22,7 @@ interface CalculadoraMetaProps {
 }
 
 export function CalculadoraMeta({ onFechar }: CalculadoraMetaProps) {
-  const { meta, resultado, atualizarMeta, calcularCenariosPrazo, calcularCenariosValorInicial } = useCalculadoraMeta();
+  const { meta, resultado, atualizarMetaAtual, calcularCenariosPrazo, calcularCenariosValorInicial } = useCalculadoraMeta();
   const [visualizacao, setVisualizacao] = useState<'calculadora' | 'cenarios' | 'analise'>('calculadora');
 
   const cenariosPrazo = calcularCenariosPrazo();
@@ -67,7 +67,7 @@ export function CalculadoraMeta({ onFechar }: CalculadoraMetaProps) {
             <input
               type="number"
               value={meta.valorMeta}
-              onChange={(e) => atualizarMeta('valorMeta', Number(e.target.value))}
+              onChange={(e) => atualizarMetaAtual('valorMeta', Number(e.target.value))}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               placeholder="100000"
             />
@@ -83,7 +83,7 @@ export function CalculadoraMeta({ onFechar }: CalculadoraMetaProps) {
             <input
               type="number"
               value={meta.periodo}
-              onChange={(e) => atualizarMeta('periodo', Number(e.target.value))}
+              onChange={(e) => atualizarMetaAtual('periodo', Number(e.target.value))}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               placeholder="60"
             />
@@ -99,7 +99,7 @@ export function CalculadoraMeta({ onFechar }: CalculadoraMetaProps) {
             <input
               type="number"
               value={meta.valorInicialDisponivel}
-              onChange={(e) => atualizarMeta('valorInicialDisponivel', Number(e.target.value))}
+              onChange={(e) => atualizarMetaAtual('valorInicialDisponivel', Number(e.target.value))}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               placeholder="0"
             />
@@ -112,7 +112,7 @@ export function CalculadoraMeta({ onFechar }: CalculadoraMetaProps) {
           </label>
           <select
             value={meta.modalidade}
-            onChange={(e) => atualizarMeta('modalidade', e.target.value)}
+            onChange={(e) => atualizarMetaAtual('modalidade', e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             {modalidadesInvestimento.map(modalidade => (
@@ -131,7 +131,7 @@ export function CalculadoraMeta({ onFechar }: CalculadoraMetaProps) {
             {(['banco', 'conservador', 'moderado'] as TaxaType[]).map(tipo => (
               <button
                 key={tipo}
-                onClick={() => atualizarMeta('taxaType', tipo)}
+                onClick={() => atualizarMetaAtual('taxaType', tipo)}
                 className={`py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                   meta.taxaType === tipo
                     ? 'bg-blue-500 text-white'

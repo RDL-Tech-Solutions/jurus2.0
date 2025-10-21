@@ -470,7 +470,7 @@ const TemplatesRelatorio: React.FC<TemplatesRelatorioProps> = ({
                         <div className="space-y-3 text-sm">
                           <div className="flex justify-between">
                             <span>Valor Final:</span>
-                            <span className="font-semibold">{formatarMoeda(resultado.saldoFinal)}</span>
+                            <span className="font-semibold">{formatarMoeda(resultado.valorFinal)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>Rentabilidade:</span>

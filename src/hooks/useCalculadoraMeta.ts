@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { TaxaType } from '../types';
+import { salvarMetasFinanceiras, carregarMetasFinanceiras } from '../utils/localStorage';
 
 // Modalidades de investimento disponíveis
 export const modalidadesInvestimento = [
@@ -53,14 +54,59 @@ export interface ResultadoMeta {
   };
 }
 
+export interface MetaSalva extends MetaInput {
+  id: string;
+  nome: string;
+  dataCriacao: Date;
+  dataAlvo: Date;
+  status: 'ativa' | 'pausada' | 'concluida';
+  progresso: number; // 0-100
+  valorAtual: number;
+  tags: string[];
+  observacoes?: string;
+  resultado?: ResultadoMeta;
+  criadoEm: string;
+}
+
 export function useCalculadoraMeta() {
   const [meta, setMeta] = useState<MetaInput>({
-    valorMeta: 100000,
-    periodo: 60,
-    taxaType: 'banco',
-    modalidade: 'CDB',
+    valorMeta: 0,
+    periodo: 0,
+    taxaType: 'cdi',
+    modalidade: 'cdb',
     valorInicialDisponivel: 0
   });
+
+  const [metas, setMetas] = useState<MetaSalva[]>([]);
+
+  // Carregar metas salvas ao inicializar
+  useEffect(() => {
+    const metasSalvas = carregarMetasFinanceiras();
+    // Adaptar dados para o formato MetaSalva se necessário
+    const metasAdaptadas = metasSalvas.map((meta: any) => {
+      if (!('nome' in meta)) {
+        return {
+          ...meta,
+          nome: `Meta ${new Date(meta.criadoEm).toLocaleDateString()}`,
+          dataCriacao: new Date(meta.criadoEm),
+          dataAlvo: new Date(Date.now() + meta.periodo * 30 * 24 * 60 * 60 * 1000),
+          status: 'ativa' as const,
+          progresso: 0,
+          valorAtual: meta.valorInicialDisponivel || 0,
+          tags: []
+        };
+      }
+      return meta;
+    }) as MetaSalva[];
+    setMetas(metasAdaptadas);
+  }, []);
+
+  // Salvar metas sempre que houver mudanças
+  useEffect(() => {
+    if (metas.length > 0) {
+      salvarMetasFinanceiras(metas);
+    }
+  }, [metas]);
 
   // Calcular aporte necessário para atingir a meta
   const calcularAporteMeta = useCallback((
@@ -250,15 +296,92 @@ export function useCalculadoraMeta() {
     });
   }, [meta, calcularAporteMeta]);
 
+  // Funções de gerenciamento de metas
+  const salvarMeta = useCallback((nome: string, observacoes?: string) => {
+    const novaMeta: MetaSalva = {
+      ...meta,
+      id: Date.now().toString(),
+      nome,
+      dataCriacao: new Date(),
+      dataAlvo: new Date(Date.now() + meta.periodo * 30 * 24 * 60 * 60 * 1000),
+      status: 'ativa',
+      progresso: 0,
+      valorAtual: meta.valorInicialDisponivel,
+      tags: [],
+      observacoes,
+      resultado,
+      criadoEm: new Date().toISOString()
+    };
+
+    setMetas(prev => [...prev, novaMeta]);
+    return novaMeta.id;
+  }, [meta]);
+
+  const atualizarMeta = useCallback((id: string, updates: Partial<MetaSalva>) => {
+    setMetas(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+  }, []);
+
+  const removerMeta = useCallback((id: string) => {
+    setMetas(prev => prev.filter(m => m.id !== id));
+  }, []);
+
+  const atualizarProgressoMeta = useCallback((id: string, valorAtual: number) => {
+    setMetas(prev => prev.map(m => {
+      if (m.id === id) {
+        const progresso = Math.min((valorAtual / m.valorMeta) * 100, 100);
+        const status = progresso >= 100 ? 'concluida' : m.status;
+        return { ...m, valorAtual, progresso, status };
+      }
+      return m;
+    }));
+  }, []);
+
+  const obterMetasPorStatus = useCallback((status: MetaSalva['status']) => {
+    return metas.filter(m => m.status === status);
+  }, [metas]);
+
+  const obterEstatisticasMetas = useCallback(() => {
+    const total = metas.length;
+    const ativas = metas.filter(m => m.status === 'ativa').length;
+    const concluidas = metas.filter(m => m.status === 'concluida').length;
+    const pausadas = metas.filter(m => m.status === 'pausada').length;
+    
+    const valorTotalMetas = metas.reduce((acc, m) => acc + m.valorMeta, 0);
+    const valorAtualTotal = metas.reduce((acc, m) => acc + m.valorAtual, 0);
+    const progressoMedio = total > 0 ? metas.reduce((acc, m) => acc + m.progresso, 0) / total : 0;
+
+    return {
+      total,
+      ativas,
+      concluidas,
+      pausadas,
+      valorTotalMetas,
+      valorAtualTotal,
+      progressoMedio
+    };
+  }, [metas]);
+
   return {
+    // Estado atual
     meta,
     resultado,
+    metas,
+    
+    // Funções básicas
     setMeta,
     calcularCenariosPrazo,
     calcularCenariosValorInicial,
     
+    // Gerenciamento de metas
+    salvarMeta,
+    atualizarMeta,
+    removerMeta,
+    atualizarProgressoMeta,
+    obterMetasPorStatus,
+    obterEstatisticasMetas,
+    
     // Helpers
-    atualizarMeta: useCallback((campo: keyof MetaInput, valor: any) => {
+    atualizarMetaAtual: useCallback((campo: keyof MetaInput, valor: any) => {
       setMeta(prev => ({ ...prev, [campo]: valor }));
     }, [])
   };

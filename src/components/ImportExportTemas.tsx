@@ -7,6 +7,7 @@ import {
   Copy,
   Check,
   X,
+  XCircle,
   FileText,
   Image,
   Code,
@@ -54,15 +55,15 @@ import {
   Trash2,
   Edit3
 } from 'lucide-react';
-import { TemaAvancado, ConfiguracaoTema } from '../types/temas';
+import { TemaAvancado, ConfiguracaoTemaAvancada } from '../types/temas';
 import { AnimatedContainer, AnimatedItem } from './AnimatedContainer';
 import { AnimatedButton } from './AnimatedButton';
 
 interface ImportExportTemasProps {
   temas: TemaAvancado[];
-  configuracao: ConfiguracaoTema;
+  configuracao: ConfiguracaoTemaAvancada;
   onImportarTemas: (temas: TemaAvancado[]) => void;
-  onImportarConfiguracao: (config: ConfiguracaoTema) => void;
+  onImportarConfiguracao: (config: ConfiguracaoTemaAvancada) => void;
   onFechar: () => void;
 }
 
@@ -304,7 +305,7 @@ export const ImportExportTemas: React.FC<ImportExportTemasProps> = ({
     }
   }, [backups]);
 
-  const calcularTamanho = useCallback((temas: TemaAvancado[], config: ConfiguracaoTema) => {
+  const calcularTamanho = useCallback((temas: TemaAvancado[], config: ConfiguracaoTemaAvancada) => {
     const dados = JSON.stringify({ temas, config });
     const bytes = new Blob([dados]).size;
     
@@ -494,8 +495,8 @@ export const ImportExportTemas: React.FC<ImportExportTemasProps> = ({
         css += `  --cor-${propriedade}: ${valor};\n`;
       });
       
-      css += `  --fonte-primaria: ${tema.tipografia.primary};\n`;
-      css += `  --fonte-secundaria: ${tema.tipografia.secondary};\n`;
+      css += `  --fonte-primaria: ${tema.tipografia.fontePrimaria};\n`;
+      css += `  --fonte-secundaria: ${tema.tipografia.fonteSecundaria};\n`;
       css += `}\n\n`;
     });
     
@@ -534,8 +535,8 @@ export const ImportExportTemas: React.FC<ImportExportTemasProps> = ({
       
       js += `    },\n`;
       js += `    tipografia: {\n`;
-      js += `      primary: '${tema.tipografia.primary}',\n`;
-      js += `      secondary: '${tema.tipografia.secondary}',\n`;
+      js += `      primary: '${tema.tipografia.fontePrimaria}',\n`;
+      js += `      secondary: '${tema.tipografia.fonteSecundaria}',\n`;
       js += `    }\n`;
       js += `  }${index < temas.length - 1 ? ',' : ''}\n`;
     });
@@ -574,8 +575,8 @@ export const ImportExportTemas: React.FC<ImportExportTemasProps> = ({
     
     config += '      },\n';
     config += '      fontFamily: {\n';
-    config += `        'primary': ['${tema.tipografia.primary}'],\n`;
-    config += `        'secondary': ['${tema.tipografia.secondary}'],\n`;
+    config += `        'primary': ['${tema.tipografia.fontePrimaria}'],\n`;
+    config += `        'secondary': ['${tema.tipografia.fonteSecundaria}'],\n`;
     config += '      }\n';
     config += '    }\n';
     config += '  }\n';

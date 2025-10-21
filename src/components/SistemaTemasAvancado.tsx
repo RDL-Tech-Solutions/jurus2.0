@@ -17,7 +17,7 @@ import {
   Smartphone,
   Tablet
 } from 'lucide-react';
-import { TemaAvancado, ConfiguracaoTema } from '../types/temas';
+import { TemaAvancado, ConfiguracaoTemaAvancada } from '../types/temas';
 import { AnimatedContainer, AnimatedItem } from './AnimatedContainer';
 import { AnimatedButton } from './AnimatedButton';
 import { GaleriaTemas } from './GaleriaTemas';
@@ -42,18 +42,26 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
   // Estados principais
   const [temas, setTemas] = useState<TemaAvancado[]>([]);
   const [temaAtivo, setTemaAtivo] = useState<string>('padrao');
-  const [configuracao, setConfiguracao] = useState<ConfiguracaoTema>({
+  const [configuracao, setConfiguracao] = useState<ConfiguracaoTemaAvancada>({
     temaAtivo: 'padrao',
     modoEscuroAutomatico: false,
     horarioModoEscuro: { inicio: '18:00', fim: '06:00' },
     sincronizarSistema: false,
     transicaoSuave: true,
     velocidadeTransicao: 200,
+    animacoesHabilitadas: true,
+    reducedMotion: false,
     salvarPreferencia: true,
     backupAutomatico: true,
     validacaoContraste: true,
     sugestoesCores: true,
-    previewTempoReal: true
+    alertasAcessibilidade: true,
+    previewTempoReal: true,
+    modoDesenvolvedor: false,
+    otimizacaoPerformance: true,
+    carregamentoLazy: true,
+    atualizacoesAutomaticas: false,
+    notificacoesNovosTemas: true
   });
 
   // Estados da interface
@@ -76,9 +84,10 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
       favorito: false,
       rating: 4.5,
       popularidade: 95,
+      versao: '1.0.0',
       dataCreacao: new Date().toISOString(),
-      dataModificacao: new Date().toISOString(),
-      paleta: {
+      ultimaModificacao: new Date().toISOString(),
+      cores: {
         primaria: '#3B82F6',
         secundaria: '#6366F1',
         terciaria: '#8B5CF6',
@@ -88,9 +97,7 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
         superficie: '#FFFFFF',
         texto: '#1F2937',
         textoSecundario: '#6B7280',
-        textoTerciario: '#9CA3AF',
         borda: '#E5E7EB',
-        bordaSecundaria: '#D1D5DB',
         sucesso: '#10B981',
         aviso: '#F59E0B',
         erro: '#EF4444',
@@ -98,25 +105,43 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
         destaque: '#8B5CF6',
         sombra: 'rgba(0, 0, 0, 0.1)',
         overlay: 'rgba(0, 0, 0, 0.5)',
-        gradientes: {
-          primario: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
-          secundario: 'linear-gradient(135deg, #8B5CF6 0%, #F59E0B 100%)',
-          fundo: 'linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 100%)'
+        gradiente: {
+          inicio: '#3B82F6',
+          fim: '#6366F1',
+          direcao: '135deg'
         }
       },
       tipografia: {
         fontePrimaria: 'Inter, system-ui, sans-serif',
         fonteSecundaria: 'JetBrains Mono, monospace',
-        fonteTerciaria: 'Inter, system-ui, sans-serif',
-        tamanhoBase: 16,
-        escalaModular: 1.25,
-        pesoTitulo: 600,
-        pesoTexto: 400,
-        pesoDestaque: 500,
-        alturaLinha: 1.5,
-        alturaLinhaCompacta: 1.25,
-        espacamentoLetras: 0,
-        espacamentoLetrasDestaque: 0.025
+        fonteTitulos: 'Inter, system-ui, sans-serif',
+        fonteMonospace: 'JetBrains Mono, monospace',
+        tamanhoBase: '16px',
+        escalaTipografica: {
+          xs: '0.75rem',
+          sm: '0.875rem',
+          base: '1rem',
+          lg: '1.125rem',
+          xl: '1.25rem',
+          '2xl': '1.5rem',
+          '3xl': '1.875rem',
+          '4xl': '2.25rem'
+        },
+        pesos: {
+          light: '300',
+          normal: '400',
+          medium: '500',
+          semibold: '600',
+          bold: '700',
+          extrabold: '800'
+        },
+        espacamento: '0',
+        alturaLinha: {
+          tight: '1.25',
+          normal: '1.5',
+          relaxed: '1.625',
+          loose: '2'
+        }
       },
       espacamento: {
         xs: '0.25rem',
@@ -125,34 +150,77 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
         lg: '1.5rem',
         xl: '2rem',
         '2xl': '3rem',
-        '3xl': '4rem'
+        '3xl': '4rem',
+        '4xl': '5rem',
+        '5xl': '6rem',
+        '6xl': '8rem'
       },
       bordas: {
-        raio: '0.5rem',
-        raioSecundario: '0.25rem',
-        raioPequeno: '0.125rem',
-        raioGrande: '1rem',
-        largura: '1px',
-        larguraDestaque: '2px',
+        raio: {
+          none: '0',
+          sm: '0.125rem',
+          md: '0.375rem',
+          lg: '0.5rem',
+          xl: '0.75rem',
+          '2xl': '1rem',
+          '3xl': '1.5rem',
+          full: '9999px'
+        },
+        largura: {
+          none: '0',
+          thin: '1px',
+          normal: '2px',
+          thick: '4px',
+          extra: '8px'
+        },
         estilo: 'solid'
       },
       sombras: {
-        pequena: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        media: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        grande: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-        interna: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-        destaque: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-        colorida: '0 4px 14px 0 rgba(59, 130, 246, 0.15)'
+        none: 'none',
+        xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+        '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)'
       },
       animacoes: {
-        duracao: '200ms',
-        duracaoLenta: '300ms',
-        duracaoRapida: '150ms',
-        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-        easingEntrada: 'cubic-bezier(0, 0, 0.2, 1)',
-        easingSaida: 'cubic-bezier(0.4, 0, 1, 1)',
-        habilitadas: true
-      }
+        duracao: {
+          instant: '0ms',
+          fast: '150ms',
+          normal: '200ms',
+          slow: '300ms',
+          slower: '500ms'
+        },
+        easing: {
+          linear: 'linear',
+          ease: 'ease',
+          easeIn: 'ease-in',
+          easeOut: 'ease-out',
+          easeInOut: 'ease-in-out',
+          bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+          elastic: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        },
+        habilitadas: true,
+        reducedMotion: false,
+        transicoes: {
+          all: 'all 200ms ease-in-out',
+          colors: 'color 200ms ease-in-out, background-color 200ms ease-in-out, border-color 200ms ease-in-out',
+          opacity: 'opacity 200ms ease-in-out',
+          shadow: 'box-shadow 200ms ease-in-out',
+          transform: 'transform 200ms ease-in-out'
+        }
+      },
+      responsivo: true,
+      acessibilidade: {
+        altoContraste: false,
+        validacaoContraste: {},
+        suporteScreenReader: true,
+        reducedMotion: false
+      },
+      exportavel: true,
+      compartilhavel: true
     }
   ];
 
@@ -196,7 +264,7 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
     setTemas(novosTemas);
   }, []);
 
-  const salvarConfiguracao = useCallback((novaConfig: ConfiguracaoTema) => {
+  const salvarConfiguracao = useCallback((novaConfig: ConfiguracaoTemaAvancada) => {
     localStorage.setItem('jurus-config-temas', JSON.stringify(novaConfig));
     setConfiguracao(novaConfig);
   }, []);
@@ -285,7 +353,7 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
       nome: `${tema.nome} (Cópia)`,
       personalizado: true,
       dataCreacao: new Date().toISOString(),
-      dataModificacao: new Date().toISOString()
+      ultimaModificacao: new Date().toISOString()
     };
     
     const temasAtualizados = [...temas, novoTema];
@@ -300,7 +368,7 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
       if (temaExistente) {
         // Atualizar tema existente
         const index = temasAtualizados.findIndex(t => t.id === tema.id);
-        temasAtualizados[index] = { ...tema, dataModificacao: new Date().toISOString() };
+        temasAtualizados[index] = { ...tema, ultimaModificacao: new Date().toISOString() };
       } else {
         // Adicionar novo tema
         temasAtualizados.push({ ...tema, personalizado: true, dataCreacao: new Date().toISOString() });
@@ -329,24 +397,23 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
     const root = document.documentElement;
     
     // Cores
-    Object.entries(tema.paleta).forEach(([chave, valor]) => {
+    Object.entries(tema.cores).forEach(([chave, valor]) => {
       if (typeof valor === 'string') {
         root.style.setProperty(`--cor-${chave}`, valor);
       }
     });
 
-    // Gradientes
-    if (tema.paleta.gradientes) {
-      Object.entries(tema.paleta.gradientes).forEach(([chave, valor]) => {
-        root.style.setProperty(`--gradiente-${chave}`, valor);
-      });
+    // Gradiente
+    if (tema.cores.gradiente) {
+      const { inicio, fim, direcao } = tema.cores.gradiente;
+      root.style.setProperty('--gradiente-primario', `linear-gradient(${direcao}, ${inicio}, ${fim})`);
     }
 
     // Tipografia
     root.style.setProperty('--fonte-primaria', tema.tipografia.fontePrimaria);
     root.style.setProperty('--fonte-secundaria', tema.tipografia.fonteSecundaria);
-    root.style.setProperty('--tamanho-base', `${tema.tipografia.tamanhoBase}px`);
-    root.style.setProperty('--altura-linha', tema.tipografia.alturaLinha.toString());
+    root.style.setProperty('--tamanho-base', tema.tipografia.tamanhoBase);
+    root.style.setProperty('--altura-linha', tema.tipografia.alturaLinha.normal);
 
     // Espaçamento
     Object.entries(tema.espacamento).forEach(([chave, valor]) => {
@@ -354,8 +421,11 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
     });
 
     // Bordas
-    Object.entries(tema.bordas).forEach(([chave, valor]) => {
-      root.style.setProperty(`--borda-${chave}`, valor);
+    Object.entries(tema.bordas.raio).forEach(([chave, valor]) => {
+      root.style.setProperty(`--borda-raio-${chave}`, valor);
+    });
+    Object.entries(tema.bordas.largura).forEach(([chave, valor]) => {
+      root.style.setProperty(`--borda-largura-${chave}`, valor);
     });
 
     // Sombras
@@ -364,8 +434,8 @@ export const SistemaTemasAvancado: React.FC<SistemaTemasAvancadoProps> = ({ onFe
     });
 
     // Animações
-    root.style.setProperty('--duracao-animacao', tema.animacoes.duracao);
-    root.style.setProperty('--easing-animacao', tema.animacoes.easing);
+    root.style.setProperty('--duracao-animacao', tema.animacoes.duracao.normal);
+    root.style.setProperty('--easing-animacao', tema.animacoes.easing.easeInOut);
   }, [temas]);
 
   const renderizarConteudo = () => {

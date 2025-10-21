@@ -21,7 +21,7 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import { useAccessibility } from '../hooks/useAccessibility';
+import useAcessibilidade from '../hooks/useAcessibilidade';
 import { useMicroInteractions } from '../hooks/useMicroInteractions';
 import { Z_INDEX } from '../constants/zIndex';
 
@@ -50,20 +50,23 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ isOpen, onClose 
     parseInt(localStorage.getItem('dataRetention') || '30')
   );
 
-  const { settings: accessibility, updateSetting: updateAccessibility } = useAccessibility();
+  const { configuracao: accessibility, setConfiguracao: updateAccessibility } = useAcessibilidade();
   const { playSound, triggerHaptic } = useMicroInteractions();
 
   const resetAccessibility = () => {
-    updateAccessibility('highContrast', false);
-    updateAccessibility('largeText', false);
-    updateAccessibility('reducedMotion', false);
-    updateAccessibility('screenReader', false);
-    updateAccessibility('keyboardNavigation', true);
-    updateAccessibility('focusIndicators', true);
-    updateAccessibility('colorBlindMode', 'none');
-    updateAccessibility('fontSize', 'medium');
-    updateAccessibility('lineHeight', 'normal');
-    updateAccessibility('letterSpacing', 'normal');
+    const defaultAccessibility = {
+      ...accessibility,
+      altoContraste: false,
+      tamanhoFonte: 'normal' as const,
+      reducaoMovimento: false,
+      leitorTela: false,
+      navegacaoTeclado: true,
+      destacarFoco: true,
+      espacamentoLinhas: 'normal' as const,
+      feedbackSonoro: false,
+      simplificarInterface: false
+    };
+    updateAccessibility(defaultAccessibility);
   };
 
   const sections: SettingsSection[] = [
@@ -235,9 +238,7 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ isOpen, onClose 
             localStorage.setItem('dataRetention', data.settings.dataRetention.toString());
           }
           if (data.settings.accessibility) {
-            Object.entries(data.settings.accessibility).forEach(([key, value]) => {
-              updateAccessibility(key as any, value);
-            });
+            updateAccessibility({ ...accessibility, ...data.settings.accessibility });
           }
         }
 
@@ -341,8 +342,8 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ isOpen, onClose 
         <label className="flex items-center space-x-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={accessibility.highContrast}
-            onChange={(e) => updateAccessibility('highContrast', e.target.checked)}
+            checked={accessibility.altoContraste}
+            onChange={(e) => updateAccessibility({ ...accessibility, altoContraste: e.target.checked })}
             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
           />
           <span className="text-sm font-medium">Alto Contraste</span>
@@ -351,18 +352,18 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ isOpen, onClose 
         <label className="flex items-center space-x-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={accessibility.largeText}
-            onChange={(e) => updateAccessibility('largeText', e.target.checked)}
+            checked={accessibility.destacarFoco}
+            onChange={(e) => updateAccessibility({ ...accessibility, destacarFoco: e.target.checked })}
             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
           />
-          <span className="text-sm font-medium">Texto Grande</span>
+          <span className="text-sm font-medium">Destacar Foco</span>
         </label>
 
         <label className="flex items-center space-x-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={accessibility.reducedMotion}
-            onChange={(e) => updateAccessibility('reducedMotion', e.target.checked)}
+            checked={accessibility.reducaoMovimento}
+            onChange={(e) => updateAccessibility({ ...accessibility, reducaoMovimento: e.target.checked })}
             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
           />
           <span className="text-sm font-medium">Movimento Reduzido</span>
@@ -371,8 +372,8 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ isOpen, onClose 
         <label className="flex items-center space-x-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={accessibility.keyboardNavigation}
-            onChange={(e) => updateAccessibility('keyboardNavigation', e.target.checked)}
+            checked={accessibility.navegacaoTeclado}
+            onChange={(e) => updateAccessibility({ ...accessibility, navegacaoTeclado: e.target.checked })}
             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
           />
           <span className="text-sm font-medium">Navegação por Teclado</span>
@@ -381,33 +382,32 @@ export const GlobalSettings: React.FC<GlobalSettingsProps> = ({ isOpen, onClose 
 
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Tamanho da Fonte: {accessibility.fontSize}%
+          Tamanho da Fonte: {accessibility.tamanhoFonte}
         </label>
         <select
-          value={accessibility.fontSize}
-          onChange={(e) => updateAccessibility('fontSize', e.target.value as 'small' | 'medium' | 'large' | 'extra-large')}
+          value={accessibility.tamanhoFonte}
+          onChange={(e) => updateAccessibility({ ...accessibility, tamanhoFonte: e.target.value as 'pequeno' | 'normal' | 'grande' | 'extra-grande' })}
           className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
         >
-          <option value="small">Pequeno</option>
-          <option value="medium">Médio</option>
-          <option value="large">Grande</option>
-          <option value="extra-large">Extra Grande</option>
+          <option value="pequeno">Pequeno</option>
+          <option value="normal">Normal</option>
+          <option value="grande">Grande</option>
+          <option value="extra-grande">Extra Grande</option>
         </select>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Modo Daltonismo
+          Espaçamento de Linhas
         </label>
         <select
-          value={accessibility.colorBlindMode}
-          onChange={(e) => updateAccessibility('colorBlindMode', e.target.value as any)}
+          value={accessibility.espacamentoLinhas}
+          onChange={(e) => updateAccessibility({ ...accessibility, espacamentoLinhas: e.target.value as 'compacto' | 'normal' | 'expandido' })}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
         >
-          <option value="none">Nenhum</option>
-          <option value="protanopia">Protanopia</option>
-          <option value="deuteranopia">Deuteranopia</option>
-          <option value="tritanopia">Tritanopia</option>
+          <option value="compacto">Compacto</option>
+          <option value="normal">Normal</option>
+          <option value="expandido">Expandido</option>
         </select>
       </div>
 

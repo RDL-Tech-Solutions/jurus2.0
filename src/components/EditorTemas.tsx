@@ -105,7 +105,7 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
     { id: 'acessibilidade', titulo: 'Acessibilidade', icon: Accessibility, expandida: false }
   ]);
   
-  const [corSelecionada, setCorSelecionada] = useState<keyof PaletaCores>('primary');
+  const [corSelecionada, setCorSelecionada] = useState<keyof PaletaCores>('primaria');
   const [harmoniaAtiva, setHarmoniaAtiva] = useState<TipoHarmoniaCor>('complementary');
   const [validacaoContraste, setValidacaoContraste] = useState<ValidacaoContraste | null>(null);
   const [modoPreview, setModoPreview] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -186,10 +186,10 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
   const aplicarHarmonia = useCallback((cores: string[]) => {
     const novasCores = { ...temaEditando.cores };
     
-    if (cores[0]) novasCores.primary = cores[0];
-    if (cores[1]) novasCores.secondary = cores[1];
-    if (cores[2]) novasCores.accent = cores[2];
-    if (cores[3]) novasCores.highlight = cores[3];
+    if (cores[0]) novasCores.primaria = cores[0];
+    if (cores[1]) novasCores.secundaria = cores[1];
+    if (cores[2]) novasCores.acento = cores[2];
+    if (cores[3] && novasCores.destaque !== undefined) novasCores.destaque = cores[3];
 
     setTemaEditando(prev => ({
       ...prev,
@@ -255,7 +255,7 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
     // Implementação simplificada - em produção usaria uma biblioteca de extração de cores
     const reader = new FileReader();
     reader.onload = (e) => {
-      const img = new Image();
+      const img = document.createElement('img');
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -313,7 +313,7 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
               key={tipo}
               onClick={() => {
                 setHarmoniaAtiva(tipo);
-                const cores = gerarHarmoniaCores(temaEditando.cores.primary, tipo);
+                const cores = gerarHarmoniaCores(temaEditando.cores.primaria, tipo);
                 aplicarHarmonia(cores);
               }}
               className={`p-3 rounded-lg border text-left transition-colors ${
@@ -360,10 +360,10 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
         <h4 className="font-medium text-gray-900">Validação de Contraste</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { texto: temaEditando.cores.text, fundo: temaEditando.cores.background, nome: 'Texto/Fundo' },
-            { texto: temaEditando.cores.textSecondary, fundo: temaEditando.cores.background, nome: 'Texto Secundário/Fundo' },
-            { texto: '#ffffff', fundo: temaEditando.cores.primary, nome: 'Branco/Primária' },
-            { texto: '#ffffff', fundo: temaEditando.cores.secondary, nome: 'Branco/Secundária' }
+            { texto: temaEditando.cores.texto, fundo: temaEditando.cores.fundo, nome: 'Texto/Fundo' },
+            { texto: temaEditando.cores.textoSecundario, fundo: temaEditando.cores.fundo, nome: 'Texto Secundário/Fundo' },
+            { texto: '#ffffff', fundo: temaEditando.cores.primaria, nome: 'Branco/Primária' },
+            { texto: '#ffffff', fundo: temaEditando.cores.secundaria, nome: 'Branco/Secundária' }
           ].map(({ texto, fundo, nome }) => {
             const validacao = validarContraste(texto, fundo);
             return (
@@ -401,25 +401,29 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
       <div className="space-y-4">
         <h4 className="font-medium text-gray-900">Família de Fontes</h4>
         <div className="grid grid-cols-1 gap-4">
-          {['primary', 'secondary', 'monospace'].map((tipo) => (
-            <div key={tipo} className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 capitalize">
-                {tipo}
+          {[
+            { key: 'fontePrimaria', label: 'Primary' },
+            { key: 'fonteSecundaria', label: 'Secondary' },
+            { key: 'fonteMonospace', label: 'Monospace' }
+          ].map(({ key, label }) => (
+            <div key={key} className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                {label}
               </label>
               <select
-                value={temaEditando.tipografia[tipo as keyof typeof temaEditando.tipografia]}
+                value={typeof temaEditando.tipografia[key as keyof typeof temaEditando.tipografia] === 'string' ? temaEditando.tipografia[key as keyof typeof temaEditando.tipografia] as string : ''}
                 onChange={(e) => setTemaEditando(prev => ({
                   ...prev,
                   tipografia: {
                     ...prev.tipografia,
-                    [tipo]: e.target.value
+                    [key]: e.target.value
                   }
                 }))}
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {fontesDisponiveis
                   .filter(fonte => 
-                    tipo === 'monospace' ? fonte.categoria === 'Monospace' : 
+                    key === 'fonteMonospace' ? fonte.categoria === 'Monospace' : 
                     fonte.categoria !== 'Monospace'
                   )
                   .map(fonte => (
@@ -438,7 +442,7 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
       <div className="space-y-4">
         <h4 className="font-medium text-gray-900">Tamanhos de Fonte</h4>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {Object.entries(temaEditando.tipografia.tamanhos).map(([tamanho, valor]) => (
+          {Object.entries(temaEditando.tipografia.escalaTipografica).map(([tamanho, valor]) => (
             <div key={tamanho} className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 {tamanho}
@@ -447,20 +451,20 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
                 type="range"
                 min="8"
                 max="72"
-                value={parseInt(valor)}
+                value={parseInt(valor as string)}
                 onChange={(e) => setTemaEditando(prev => ({
                   ...prev,
                   tipografia: {
                     ...prev.tipografia,
-                    tamanhos: {
-                      ...prev.tipografia.tamanhos,
+                    escalaTipografica: {
+                      ...prev.tipografia.escalaTipografica,
                       [tamanho]: `${e.target.value}px`
                     }
                   }
                 }))}
                 className="w-full"
               />
-              <div className="text-xs text-gray-600 text-center">{valor}</div>
+              <div className="text-xs text-gray-600 text-center">{valor as string}</div>
             </div>
           ))}
         </div>
@@ -587,7 +591,6 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
             <AnimatedButton
               variant="ghost"
               size="sm"
-              as="span"
             >
               <Upload className="w-4 h-4 mr-2" />
               Importar
@@ -685,14 +688,14 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
                 'max-w-sm'
               }`}
               style={{
-                backgroundColor: temaEditando.cores.background,
-                color: temaEditando.cores.text,
-                fontFamily: temaEditando.tipografia.primary
+                backgroundColor: temaEditando.cores.fundo,
+                color: temaEditando.cores.texto,
+                fontFamily: temaEditando.tipografia.fontePrimaria
               }}
             >
               <div 
                 className="p-4"
-                style={{ backgroundColor: temaEditando.cores.primary }}
+                style={{ backgroundColor: temaEditando.cores.primaria }}
               >
                 <h4 className="text-lg font-semibold text-white">
                   Preview do Tema
@@ -703,13 +706,13 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
                 <div>
                   <h5 
                     className="font-medium mb-2"
-                    style={{ color: temaEditando.cores.text }}
+                    style={{ color: temaEditando.cores.texto }}
                   >
                     Título Principal
                   </h5>
                   <p 
                     className="text-sm"
-                    style={{ color: temaEditando.cores.textSecondary }}
+                    style={{ color: temaEditando.cores.textoSecundario }}
                   >
                     Este é um exemplo de texto secundário para demonstrar como o tema ficará na aplicação.
                   </p>
@@ -718,15 +721,15 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
                 <div className="flex space-x-2">
                   <button
                     className="px-4 py-2 rounded text-sm font-medium text-white"
-                    style={{ backgroundColor: temaEditando.cores.primary }}
+                    style={{ backgroundColor: temaEditando.cores.primaria }}
                   >
                     Botão Primário
                   </button>
                   <button
                     className="px-4 py-2 rounded text-sm font-medium border"
                     style={{ 
-                      color: temaEditando.cores.primary,
-                      borderColor: temaEditando.cores.primary
+                      color: temaEditando.cores.primaria,
+                      borderColor: temaEditando.cores.primaria
                     }}
                   >
                     Botão Secundário
@@ -735,7 +738,7 @@ export const EditorTemas: React.FC<EditorTemasProps> = ({
 
                 <div 
                   className="p-3 rounded"
-                  style={{ backgroundColor: temaEditando.cores.surface }}
+                  style={{ backgroundColor: temaEditando.cores.superficie }}
                 >
                   <p className="text-sm">
                     Exemplo de superfície com cor de fundo alternativa.

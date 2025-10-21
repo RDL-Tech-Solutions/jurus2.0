@@ -5,7 +5,15 @@ export const localStorageKeys: LocalStorageKeys = {
   TEMA_PREFERIDO: 'calculadora_tema',
   SIMULACOES_SALVAS: 'calculadora_simulacoes',
   COMPARACOES_ATIVAS: 'calculadora_comparacoes',
-  CONFIGURACOES: 'calculadora_config'
+  CONFIGURACOES: 'calculadora_config',
+  HISTORICO_SIMULACOES: 'jurus_historico_simulacoes',
+  METAS_FINANCEIRAS: 'jurus_metas_financeiras',
+  PERFORMANCE_DASHBOARD: 'jurus_performance_dashboard',
+  CENARIOS_ANALISE: 'jurus_cenarios_analise',
+  RECOMENDACOES_IA: 'jurus_recomendacoes_ia',
+  APOSENTADORIA_DADOS: 'jurus_aposentadoria_dados',
+  PERFIL_INVESTIDOR: 'jurus_perfil_investidor',
+  ALERTAS_INTELIGENTES: 'jurus_alertas_inteligentes'
 };
 
 // Modalidades pré-cadastradas (dados estáticos)

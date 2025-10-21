@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { SimulacaoInput, ResultadoSimulacao } from '../types';
+import { salvarHistoricoSimulacoes, carregarHistoricoSimulacoes } from '../utils/localStorage';
 
 export interface HistoricoItem {
   id: string;
@@ -13,9 +14,22 @@ export interface HistoricoItem {
 }
 
 export function useHistorico() {
-  const [historico, setHistorico] = useLocalStorage<HistoricoItem[]>('historico-simulacoes', []);
+  const [historico, setHistorico] = useState<HistoricoItem[]>([]);
   const [filtroTags, setFiltroTags] = useState<string[]>([]);
   const [ordenacao, setOrdenacao] = useState<'data' | 'nome' | 'valor'>('data');
+
+  // Carregar histórico ao inicializar
+  useEffect(() => {
+    const historicoSalvo = carregarHistoricoSimulacoes();
+    setHistorico(historicoSalvo);
+  }, []);
+
+  // Salvar histórico sempre que houver mudanças
+  useEffect(() => {
+    if (historico.length > 0) {
+      salvarHistoricoSimulacoes(historico);
+    }
+  }, [historico]);
 
   // Adicionar simulação ao histórico
   const adicionarAoHistorico = useCallback((

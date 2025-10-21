@@ -74,13 +74,13 @@ import {
   Gauge,
   Package
 } from 'lucide-react';
-import { TemaAvancado, ConfiguracaoTema } from '../types/temas';
+import { TemaAvancado, ConfiguracaoTemaAvancada } from '../types/temas';
 import { AnimatedContainer, AnimatedItem } from './AnimatedContainer';
 import { AnimatedButton } from './AnimatedButton';
 
 interface ConfiguracoesAvancadasProps {
-  configuracao: ConfiguracaoTema;
-  onAtualizarConfiguracao: (config: ConfiguracaoTema) => void;
+  configuracao: ConfiguracaoTemaAvancada;
+  onAtualizarConfiguracao: (config: ConfiguracaoTemaAvancada) => void;
   temas: TemaAvancado[];
   onFechar: () => void;
 }

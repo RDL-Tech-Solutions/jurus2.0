@@ -2,25 +2,7 @@
  * Simulation utilities for financial calculations
  */
 
-export interface SimulacaoParametros {
-  valorInicial: number;
-  valorMensal: number;
-  taxa: number;
-  periodo: number;
-  tipoTaxa: 'mensal' | 'anual';
-}
-
-export interface ResultadoSimulacao {
-  valorFinal: number;
-  totalInvestido: number;
-  totalJuros: number;
-  evolucaoMensal: Array<{
-    mes: number;
-    valorInvestido: number;
-    valorAcumulado: number;
-    juros: number;
-  }>;
-}
+import { SimulacaoParametros, ResultadoSimulacao } from '../types/simulacao';
 
 export const simularInvestimento = (parametros: SimulacaoParametros): ResultadoSimulacao => {
   const { valorInicial, valorMensal, taxa, periodo, tipoTaxa } = parametros;
@@ -34,8 +16,8 @@ export const simularInvestimento = (parametros: SimulacaoParametros): ResultadoS
   
   for (let mes = 1; mes <= periodo; mes++) {
     // Add monthly contribution
-    valorAcumulado += valorMensal;
-    totalInvestido += valorMensal;
+    valorAcumulado += valorMensal || 0;
+    totalInvestido += valorMensal || 0;
     
     // Apply interest
     valorAcumulado *= (1 + taxaMensal);
@@ -44,16 +26,23 @@ export const simularInvestimento = (parametros: SimulacaoParametros): ResultadoS
     
     evolucaoMensal.push({
       mes,
+      contribuicao: valorMensal || 0,
+      juros: juros - (evolucaoMensal[mes - 2]?.juros || 0),
+      saldoAcumulado: valorAcumulado,
       valorInvestido: totalInvestido,
-      valorAcumulado,
-      juros
+      valorAcumulado
     });
   }
   
+  const totalJuros = valorAcumulado - totalInvestido;
+  
   return {
     valorFinal: valorAcumulado,
+    saldoFinal: valorAcumulado, // Alias para valorFinal
     totalInvestido,
-    totalJuros: valorAcumulado - totalInvestido,
+    totalJuros,
+    rendimentoTotal: totalJuros, // Alias para totalJuros
+    jurosGanhos: totalJuros, // Alias para totalJuros
     evolucaoMensal
   };
 };

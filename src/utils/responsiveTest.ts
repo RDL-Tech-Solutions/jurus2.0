@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 // Utilitário para testar responsividade
 export const BREAKPOINTS = {
   mobile: 320,
@@ -125,7 +127,7 @@ export const checkLayoutIntegrity = (): {
   }
   
   // Verificar navegação
-  const navigation = document.querySelector('nav, [role="navigation"]');
+  const navigation = document.querySelector('nav, [role="navigation"]') as HTMLElement;
   if (navigation && hasHorizontalOverflow(navigation)) {
     hasBrokenNavigation = true;
     issues.push('Overflow na navegação detectado');

@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -24,13 +24,23 @@ import {
   BarChart3,
   PieChart,
   Bell,
-  Filter
+  Filter,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  Calculator,
+  TrendingDown,
+  Zap,
+  Eye,
+  BarChart2,
+  LineChart
 } from 'lucide-react';
 import { MetaFinanceira } from '../types/metas';
 import { formatCurrency } from '../utils/formatters';
 import { useMetasFinanceiras } from '../hooks/useMetasFinanceiras';
 import TimelineMetas from './TimelineMetas';
 import { AnimatedContainer, AnimatedItem, StaggeredContainer } from './AnimatedContainer';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
 const MetasFinanceiras = memo(() => {
   const {
@@ -52,9 +62,11 @@ const MetasFinanceiras = memo(() => {
   const [modalAberto, setModalAberto] = useState(false);
   const [metaEditando, setMetaEditando] = useState<MetaFinanceira | null>(null);
   const [modalContribuicao, setModalContribuicao] = useState<string | null>(null);
+  const [modalAnalise, setModalAnalise] = useState<string | null>(null);
+  const [modalSimulacao, setModalSimulacao] = useState<string | null>(null);
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todas');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
-  const [visualizacao, setVisualizacao] = useState<'cards' | 'timeline'>('cards');
+  const [visualizacao, setVisualizacao] = useState<'cards' | 'timeline' | 'analytics'>('cards');
 
   // Filtrar metas
   const metasFiltradas = metas.filter(meta => {
@@ -65,6 +77,235 @@ const MetasFinanceiras = memo(() => {
 
   const categorias = ['emergencia', 'aposentadoria', 'casa', 'viagem', 'educacao', 'investimento', 'outros'];
   const categoriasDisponiveis = Object.keys(metasPorCategoria);
+
+  // Dados para gráficos
+  const dadosProgresso = useMemo(() => {
+    return metas.map(meta => ({
+      nome: meta.nome.substring(0, 15) + (meta.nome.length > 15 ? '...' : ''),
+      progresso: (meta.valorAtual / meta.valorMeta) * 100,
+      valorAtual: meta.valorAtual,
+      valorMeta: meta.valorMeta,
+      categoria: meta.categoria
+    }));
+  }, [metas]);
+
+  const dadosCategorias = useMemo(() => {
+    const cores = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#8dd1e1', '#d084d0', '#ffb347'];
+    return Object.entries(metasPorCategoria).map(([categoria, metasCategoria], index) => ({
+      name: categoria.charAt(0).toUpperCase() + categoria.slice(1),
+      value: metasCategoria.length,
+      total: metasCategoria.reduce((acc, meta) => acc + meta.valorMeta, 0),
+      color: cores[index % cores.length]
+    }));
+  }, [metasPorCategoria]);
+
+  const dadosEvolucao = useMemo(() => {
+    const mesesPassados = 12;
+    const dados = [];
+    const hoje = new Date();
+    
+    for (let i = mesesPassados; i >= 0; i--) {
+      const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      const mes = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      
+      // Simular evolução das metas (em um cenário real, isso viria do histórico)
+      const valorTotal = metas.reduce((acc, meta) => {
+        const progressoSimulado = Math.min(100, ((mesesPassados - i) / mesesPassados) * (meta.valorAtual / meta.valorMeta) * 100);
+        return acc + (meta.valorMeta * progressoSimulado / 100);
+      }, 0);
+      
+      dados.push({
+        mes,
+        valor: valorTotal,
+        metas: metas.length
+      });
+    }
+    
+    return dados;
+  }, [metas]);
+
+  // Funções de exportação
+  const exportarDados = (formato: 'json' | 'csv') => {
+    const dados = metas.map(meta => ({
+      nome: meta.nome,
+      categoria: meta.categoria,
+      valorMeta: meta.valorMeta,
+      valorAtual: meta.valorAtual,
+      progresso: ((meta.valorAtual / meta.valorMeta) * 100).toFixed(2) + '%',
+      status: meta.status,
+      dataInicio: meta.dataInicio.toLocaleDateString('pt-BR'),
+      dataObjetivo: meta.dataObjetivo.toLocaleDateString('pt-BR'),
+      tempoRestante: calcularTempoRestante(meta)?.dias || 0,
+      valorMensalNecessario: calcularValorMensalNecessario(meta)
+    }));
+
+    if (formato === 'json') {
+      const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `metas-financeiras-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const headers = Object.keys(dados[0] || {});
+      const csv = [
+        headers.join(','),
+        ...dados.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `metas-financeiras-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const renderAnalytics = () => (
+    <div className="space-y-6">
+      {/* Métricas Avançadas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Valor Total Objetivos</p>
+                <p className="text-2xl font-bold">{formatCurrency(metas.reduce((acc, meta) => acc + meta.valorMeta, 0))}</p>
+              </div>
+              <Target className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Valor Atual Total</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(metas.reduce((acc, meta) => acc + meta.valorAtual, 0))}</p>
+              </div>
+              <DollarSign className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Aporte Mensal Total</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {formatCurrency(metas.reduce((acc, meta) => acc + calcularValorMensalNecessario(meta), 0))}
+                </p>
+              </div>
+              <Calculator className="h-8 w-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Tempo Médio Restante</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {Math.round(metas.reduce((acc, meta) => {
+                    const tempo = calcularTempoRestante(meta);
+                    return acc + (tempo?.dias || 0);
+                  }, 0) / (metas.length || 1))} dias
+                </p>
+              </div>
+              <Clock className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Progresso por Meta */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart2 className="h-5 w-5" />
+              Progresso por Meta
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsBarChart data={dadosProgresso}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="nome" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: any, name: string) => [
+                    name === 'progresso' ? `${value.toFixed(1)}%` : formatCurrency(value),
+                    name === 'progresso' ? 'Progresso' : name === 'valorAtual' ? 'Valor Atual' : 'Valor Meta'
+                  ]}
+                />
+                <Bar dataKey="progresso" fill="#8884d8" />
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Distribuição por Categoria */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="h-5 w-5" />
+              Distribuição por Categoria
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsPieChart>
+                <Pie
+                  data={dadosCategorias}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {dadosCategorias.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: any) => [value, 'Quantidade']} />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Evolução Temporal */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LineChart className="h-5 w-5" />
+              Evolução das Metas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsLineChart data={dadosEvolucao}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="mes" />
+                <YAxis />
+                <Tooltip formatter={(value: any) => [formatCurrency(value), 'Valor Total']} />
+                <Line type="monotone" dataKey="valor" stroke="#8884d8" strokeWidth={2} />
+              </RechartsLineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -201,39 +442,66 @@ const MetasFinanceiras = memo(() => {
                 variant={visualizacao === 'timeline' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setVisualizacao('timeline')}
-                className="rounded-l-none"
+                className="rounded-none"
               >
                 <PieChart className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={visualizacao === 'analytics' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setVisualizacao('analytics')}
+                className="rounded-l-none"
+              >
+                <BarChart2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          <Dialog open={modalAberto} onOpenChange={setModalAberto}>
-            <DialogTrigger>
-              <Button onClick={() => setMetaEditando(null)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Meta
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <FormularioMeta
-                meta={metaEditando}
-                onSalvar={(dados) => {
-                  if (metaEditando) {
-                    editarMeta(metaEditando.id, dados);
-                  } else {
-                    criarMeta(dados);
-                  }
-                  setModalAberto(false);
-                  setMetaEditando(null);
-                }}
-                onCancelar={() => {
-                  setModalAberto(false);
-                  setMetaEditando(null);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportarDados('json')}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              JSON
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportarDados('csv')}
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              CSV
+            </Button>
+            
+            <Dialog open={modalAberto} onOpenChange={setModalAberto}>
+              <DialogTrigger>
+                <Button onClick={() => setMetaEditando(null)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Meta
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <FormularioMeta
+                  meta={metaEditando}
+                  onSalvar={(dados) => {
+                    if (metaEditando) {
+                      editarMeta(metaEditando.id, dados);
+                    } else {
+                      criarMeta(dados);
+                    }
+                    setModalAberto(false);
+                    setMetaEditando(null);
+                  }}
+                  onCancelar={() => {
+                    setModalAberto(false);
+                    setMetaEditando(null);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </AnimatedContainer>
 
@@ -251,15 +519,21 @@ const MetasFinanceiras = memo(() => {
                 onExcluir={excluirMeta}
                 onContribuir={(id) => setModalContribuicao(id)}
                 onAlternarStatus={alternarStatusMeta}
+                onAnalisar={(id) => setModalAnalise(id)}
+                onSimular={(id) => setModalSimulacao(id)}
                 calcularTempoRestante={calcularTempoRestante}
                 calcularValorMensalNecessario={calcularValorMensalNecessario}
               />
             </AnimatedItem>
           ))}
         </StaggeredContainer>
-      ) : (
+      ) : visualizacao === 'timeline' ? (
         <AnimatedContainer variant="fadeIn">
           <TimelineMetas />
+        </AnimatedContainer>
+      ) : (
+        <AnimatedContainer variant="fadeIn">
+          {renderAnalytics()}
         </AnimatedContainer>
       )}
 
@@ -269,6 +543,24 @@ const MetasFinanceiras = memo(() => {
           metaId={modalContribuicao}
           onContribuir={adicionarContribuicao}
           onFechar={() => setModalContribuicao(null)}
+        />
+      )}
+
+      {/* Modal de Análise */}
+      {modalAnalise && (
+        <ModalAnalise
+          metaId={modalAnalise}
+          onFechar={() => setModalAnalise(null)}
+          calcularTempoRestante={calcularTempoRestante}
+          calcularValorMensalNecessario={calcularValorMensalNecessario}
+        />
+      )}
+
+      {/* Modal de Simulação */}
+      {modalSimulacao && (
+        <ModalSimulacao
+          metaId={modalSimulacao}
+          onFechar={() => setModalSimulacao(null)}
         />
       )}
 
@@ -305,6 +597,8 @@ const MetaCard = memo(({
   onExcluir, 
   onContribuir, 
   onAlternarStatus,
+  onAnalisar,
+  onSimular,
   calcularTempoRestante,
   calcularValorMensalNecessario
 }: {
@@ -313,6 +607,8 @@ const MetaCard = memo(({
   onExcluir: (id: string) => void;
   onContribuir: (id: string) => void;
   onAlternarStatus: (id: string) => void;
+  onAnalisar?: (id: string) => void;
+  onSimular?: (id: string) => void;
   calcularTempoRestante: (meta: MetaFinanceira) => any;
   calcularValorMensalNecessario: (meta: MetaFinanceira) => number;
 }) => {
@@ -648,6 +944,54 @@ const ModalContribuicao = memo(({
             </Button>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+const ModalAnalise = memo(({ 
+  metaId, 
+  onFechar,
+  calcularTempoRestante,
+  calcularValorMensalNecessario
+}: {
+  metaId: string;
+  onFechar: () => void;
+  calcularTempoRestante: (meta: MetaFinanceira) => any;
+  calcularValorMensalNecessario: (meta: MetaFinanceira) => number;
+}) => {
+  return (
+    <Dialog open={true} onOpenChange={onFechar}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Análise da Meta</DialogTitle>
+        </DialogHeader>
+        <div className="p-4">
+          <p>Análise detalhada da meta {metaId}</p>
+          {/* Implementar análise detalhada */}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+const ModalSimulacao = memo(({ 
+  metaId, 
+  onFechar 
+}: {
+  metaId: string;
+  onFechar: () => void;
+}) => {
+  return (
+    <Dialog open={true} onOpenChange={onFechar}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Simulação da Meta</DialogTitle>
+        </DialogHeader>
+        <div className="p-4">
+          <p>Simulação de cenários para a meta {metaId}</p>
+          {/* Implementar simulação */}
+        </div>
       </DialogContent>
     </Dialog>
   );

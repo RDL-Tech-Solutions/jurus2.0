@@ -230,7 +230,7 @@ const ModoApresentacao: React.FC<{
                 <div className="text-center space-y-4">
                   <div>
                     <div className="text-3xl font-bold text-green-600 mb-1">
-                      {resultado ? `R$ ${resultado.saldoFinal.toLocaleString('pt-BR')}` : 'R$ 136.307'}
+                      {resultado ? `R$ ${resultado.valorFinal.toLocaleString('pt-BR')}` : 'R$ 136.307'}
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Valor Final</p>
                   </div>
@@ -244,7 +244,7 @@ const ModoApresentacao: React.FC<{
                     </div>
                     <div>
                       <div className="font-semibold text-purple-600">
-                        {resultado ? `R$ ${(resultado.saldoFinal - (resultado.totalInvestido || 0)).toLocaleString('pt-BR')}` : 'R$ 66.307'}
+                        {resultado ? `R$ ${(resultado.valorFinal - (resultado.totalInvestido || 0)).toLocaleString('pt-BR')}` : 'R$ 66.307'}
                       </div>
                       <p className="text-gray-600 dark:text-gray-400">Juros Ganhos</p>
                     </div>
@@ -252,7 +252,7 @@ const ModoApresentacao: React.FC<{
                   
                   <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                     <div className="text-lg font-semibold text-orange-600">
-                      {resultado ? `${((resultado.saldoFinal / (resultado.totalInvestido || 1) - 1) * 100).toFixed(1)}%` : '94.7%'}
+                      {resultado ? `${((resultado.valorFinal / (resultado.totalInvestido || 1) - 1) * 100).toFixed(1)}%` : '94.7%'}
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Rentabilidade Total</p>
                   </div>

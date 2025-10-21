@@ -17,7 +17,7 @@ import {
   Keyboard,
   Focus
 } from 'lucide-react';
-import { useAccessibility } from '../hooks/useAccessibility';
+import useAcessibilidade from '../hooks/useAcessibilidade';
 import { useMicroInteractions } from '../hooks/useMicroInteractions';
 import { Z_INDEX } from '../constants/zIndex';
 
@@ -31,10 +31,10 @@ export const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({
   onClose
 }) => {
   const {
-    settings,
-    updateSetting,
-    announce
-  } = useAccessibility();
+    configuracao: settings,
+    setConfiguracao: updateSetting,
+    anunciar: announce
+  } = useAcessibilidade();
 
   const { playSound, triggerHaptic } = useMicroInteractions();
 
@@ -48,33 +48,37 @@ export const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({
   ];
 
   const handleSettingChange = (key: string, value: any) => {
-    updateSetting(key as any, value);
-    playSound(600, 80);
-    triggerHaptic('light');
-    announce(`${key} ${value ? 'ativado' : 'desativado'}`);
-  };
-
-  const handleReset = () => {
-    // Reset manual das configurações
-    updateSetting('highContrast', false);
-    updateSetting('fontSize', 'medium');
-    updateSetting('reducedMotion', false);
-    updateSetting('screenReader', false);
-    updateSetting('keyboardNavigation', false);
-    updateSetting('focusIndicators', true);
-    playSound(800, 100);
-    triggerHaptic('medium');
-    announce('Configurações de acessibilidade redefinidas');
+    updateSetting({ ...settings, [key]: value });
+    playSound(800);
+    triggerHaptic();
+    announce(`${key} alterado para ${value}`, 'baixa');
   };
 
   const handleValidate = () => {
-    // Validação simples
     const issues = [];
-    if (!settings.focusIndicators) issues.push('Indicador de foco desabilitado');
-    if (!settings.keyboardNavigation) issues.push('Navegação por teclado desabilitada');
+    if (!settings.altoContraste && settings.tamanhoFonte === 'pequeno') issues.push('Considere ativar alto contraste ou aumentar o tamanho da fonte');
+    if (!settings.destacarFoco) issues.push('Indicador de foco desabilitado');
+    if (!settings.navegacaoTeclado) issues.push('Navegação por teclado desabilitada');
     
-    playSound(440, 150);
-    announce(`${issues.length} problemas de acessibilidade encontrados`);
+    if (issues.length === 0) {
+      announce('Configurações de acessibilidade validadas com sucesso', 'alta');
+    } else {
+      announce(`Problemas encontrados: ${issues.join(', ')}`, 'alta');
+    }
+  };
+
+  const handleReset = () => {
+    updateSetting({
+      ...settings,
+      altoContraste: false,
+      tamanhoFonte: 'normal',
+      reducaoMovimento: false,
+      espacamentoLinhas: 'normal',
+      leitorTela: false,
+      navegacaoTeclado: true,
+      destacarFoco: true
+    });
+    announce('Configurações redefinidas', 'media');
   };
 
   return (
@@ -126,7 +130,7 @@ export const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({
                   key={section.id}
                   onClick={() => {
                     setActiveSection(section.id);
-                    playSound(600, 80);
+                    playSound(600);
                   }}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-colors ${
                     activeSection === section.id
@@ -172,18 +176,42 @@ export const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({
                           </p>
                         </div>
                         <motion.button
-                          onClick={() => handleSettingChange('highContrast', !settings.highContrast)}
+                          onClick={() => handleSettingChange('altoContraste', !settings.altoContraste)}
                           className={`relative w-12 h-6 rounded-full transition-colors ${
-                            settings.highContrast ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                            settings.altoContraste ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                           }`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          aria-pressed={settings.highContrast}
-                          aria-label="Alternar alto contraste"
                         >
                           <motion.div
                             className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
-                            animate={{ x: settings.highContrast ? 24 : 0 }}
+                            animate={{ x: settings.altoContraste ? 24 : 0 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          />
+                        </motion.button>
+                      </div>
+
+                      {/* Focus Highlight */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Destacar Foco
+                          </label>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Destaca elementos em foco
+                          </p>
+                        </div>
+                        <motion.button
+                          onClick={() => handleSettingChange('destacarFoco', !settings.destacarFoco)}
+                          className={`relative w-12 h-6 rounded-full transition-colors ${
+                            settings.destacarFoco ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <motion.div
+                            className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
+                            animate={{ x: settings.destacarFoco ? 24 : 0 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                           />
                         </motion.button>
@@ -196,53 +224,23 @@ export const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({
                             Reduzir Movimento
                           </label>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Minimiza animações e transições
+                            Reduz animações e transições
                           </p>
                         </div>
                         <motion.button
-                          onClick={() => handleSettingChange('reducedMotion', !settings.reducedMotion)}
+                          onClick={() => handleSettingChange('reducaoMovimento', !settings.reducaoMovimento)}
                           className={`relative w-12 h-6 rounded-full transition-colors ${
-                            settings.reducedMotion ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                            settings.reducaoMovimento ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                           }`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          aria-pressed={settings.reducedMotion}
                         >
                           <motion.div
                             className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
-                            animate={{ x: settings.reducedMotion ? 24 : 0 }}
+                            animate={{ x: settings.reducaoMovimento ? 24 : 0 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                           />
                         </motion.button>
-                      </div>
-
-                      {/* Color Blind Mode */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Modo Daltonismo
-                        </label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {[
-                            { value: 'none', label: 'Normal' },
-                            { value: 'protanopia', label: 'Protanopia' },
-                            { value: 'deuteranopia', label: 'Deuteranopia' },
-                            { value: 'tritanopia', label: 'Tritanopia' }
-                          ].map((option) => (
-                            <motion.button
-                              key={option.value}
-                              onClick={() => handleSettingChange('colorBlindMode', option.value)}
-                              className={`p-2 text-xs rounded-lg border transition-colors ${
-                                settings.colorBlindMode === option.value
-                                  ? 'bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900 dark:border-blue-600 dark:text-blue-300'
-                                  : 'bg-gray-50 border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'
-                              }`}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              {option.label}
-                            </motion.button>
-                          ))}
-                        </div>
                       </div>
                     </div>
                   )}
@@ -254,77 +252,61 @@ export const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({
                         Configurações de Texto
                       </h3>
 
-                      {/* Large Text */}
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Texto Grande
-                          </label>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Aumenta o tamanho do texto
-                          </p>
-                        </div>
-                        <motion.button
-                          onClick={() => handleSettingChange('largeText', !settings.largeText)}
-                          className={`relative w-12 h-6 rounded-full transition-colors ${
-                            settings.largeText ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                          }`}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <motion.div
-                            className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
-                            animate={{ x: settings.largeText ? 24 : 0 }}
-                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                          />
-                        </motion.button>
-                      </div>
-
                       {/* Font Size */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Tamanho da Fonte: {settings.fontSize}px
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Tamanho da Fonte
                         </label>
-                        <input
-                          type="range"
-                          min="12"
-                          max="24"
-                          value={settings.fontSize}
-                          onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))}
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { value: 'pequeno', label: 'Pequeno' },
+                            { value: 'normal', label: 'Normal' },
+                            { value: 'grande', label: 'Grande' },
+                            { value: 'extra-grande', label: 'Extra Grande' }
+                          ].map((option) => (
+                            <motion.button
+                              key={option.value}
+                              onClick={() => handleSettingChange('tamanhoFonte', option.value)}
+                              className={`p-2 text-xs rounded-lg border transition-colors ${
+                                settings.tamanhoFonte === option.value
+                                  ? 'bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900 dark:border-blue-600 dark:text-blue-300'
+                                  : 'bg-gray-50 border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'
+                              }`}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              {option.label}
+                            </motion.button>
+                          ))}
+                        </div>
                       </div>
 
-                      {/* Line Height */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Altura da Linha: {settings.lineHeight}
+                      {/* Line Spacing */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Espaçamento de Linhas
                         </label>
-                        <input
-                          type="range"
-                          min="1"
-                          max="2"
-                          step="0.1"
-                          value={settings.lineHeight}
-                          onChange={(e) => handleSettingChange('lineHeight', parseFloat(e.target.value))}
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                        />
-                      </div>
-
-                      {/* Letter Spacing */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Espaçamento: {settings.letterSpacing}px
-                        </label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="3"
-                          step="0.5"
-                          value={settings.letterSpacing}
-                          onChange={(e) => handleSettingChange('letterSpacing', parseFloat(e.target.value))}
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { value: 'compacto', label: 'Compacto' },
+                            { value: 'normal', label: 'Normal' },
+                            { value: 'expandido', label: 'Expandido' }
+                          ].map((option) => (
+                            <motion.button
+                              key={option.value}
+                              onClick={() => handleSettingChange('espacamentoLinhas', option.value)}
+                              className={`p-2 text-xs rounded-lg border transition-colors ${
+                                settings.espacamentoLinhas === option.value
+                                  ? 'bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900 dark:border-blue-600 dark:text-blue-300'
+                                  : 'bg-gray-50 border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'
+                              }`}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              {option.label}
+                            </motion.button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -347,42 +329,42 @@ export const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({
                           </p>
                         </div>
                         <motion.button
-                          onClick={() => handleSettingChange('keyboardNavigation', !settings.keyboardNavigation)}
+                          onClick={() => handleSettingChange('navegacaoTeclado', !settings.navegacaoTeclado)}
                           className={`relative w-12 h-6 rounded-full transition-colors ${
-                            settings.keyboardNavigation ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                            settings.navegacaoTeclado ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                           }`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
                           <motion.div
                             className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
-                            animate={{ x: settings.keyboardNavigation ? 24 : 0 }}
+                            animate={{ x: settings.navegacaoTeclado ? 24 : 0 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                           />
                         </motion.button>
                       </div>
 
-                      {/* Focus Indicators */}
+                      {/* Simplify Interface */}
                       <div className="flex items-center justify-between">
                         <div>
                           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Indicadores de Foco
+                            Simplificar Interface
                           </label>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Destaca elementos focados
+                            Remove elementos desnecessários
                           </p>
                         </div>
                         <motion.button
-                          onClick={() => handleSettingChange('focusIndicators', !settings.focusIndicators)}
+                          onClick={() => handleSettingChange('simplificarInterface', !settings.simplificarInterface)}
                           className={`relative w-12 h-6 rounded-full transition-colors ${
-                            settings.focusIndicators ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                            settings.simplificarInterface ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                           }`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
                           <motion.div
                             className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
-                            animate={{ x: settings.focusIndicators ? 24 : 0 }}
+                            animate={{ x: settings.simplificarInterface ? 24 : 0 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                           />
                         </motion.button>
@@ -408,16 +390,42 @@ export const AccessibilityPanel: React.FC<AccessibilityPanelProps> = ({
                           </p>
                         </div>
                         <motion.button
-                          onClick={() => handleSettingChange('screenReader', !settings.screenReader)}
+                          onClick={() => handleSettingChange('leitorTela', !settings.leitorTela)}
                           className={`relative w-12 h-6 rounded-full transition-colors ${
-                            settings.screenReader ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                            settings.leitorTela ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                           }`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
                           <motion.div
                             className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
-                            animate={{ x: settings.screenReader ? 24 : 0 }}
+                            animate={{ x: settings.leitorTela ? 24 : 0 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          />
+                        </motion.button>
+                      </div>
+
+                      {/* Sound Feedback */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Feedback Sonoro
+                          </label>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Sons de confirmação para ações
+                          </p>
+                        </div>
+                        <motion.button
+                          onClick={() => handleSettingChange('feedbackSonoro', !settings.feedbackSonoro)}
+                          className={`relative w-12 h-6 rounded-full transition-colors ${
+                            settings.feedbackSonoro ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <motion.div
+                            className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
+                            animate={{ x: settings.feedbackSonoro ? 24 : 0 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                           />
                         </motion.button>

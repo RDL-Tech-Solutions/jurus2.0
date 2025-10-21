@@ -268,7 +268,7 @@ export const usePerformanceMonitoring = () => {
       for (const entry of list.getEntries()) {
         setMetrics(prev => ({
           ...prev,
-          fid: (entry as any).processingStart - entry.startTime
+          fid: (entry as any).duration || 0
         }));
       }
     });

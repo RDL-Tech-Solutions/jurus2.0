@@ -11,7 +11,11 @@ import {
   ChevronRight,
   Keyboard,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Heart,
+  Brain,
+  GraduationCap,
+  FileText
 } from 'lucide-react';
 import { useHoverPreload } from '../hooks/usePreloadComponents';
 import { getZIndexClass, Z_INDEX } from '../constants/zIndex';
@@ -62,32 +66,52 @@ const tabs: Tab[] = [
     description: 'Definir metas financeiras'
   },
   {
+    id: 'favoritos',
+    label: 'Favoritos',
+    icon: <Heart className="w-4 h-4" />,
+    shortcut: '5',
+    description: 'Simulações favoritas'
+  },
+  {
     id: 'performance',
     label: 'Performance',
     icon: <TrendingUp className="w-4 h-4" />,
-    shortcut: '5',
+    shortcut: '6',
     description: 'Dashboard de performance'
   },
   {
     id: 'cenarios',
     label: 'Cenários',
     icon: <Lightbulb className="w-4 h-4" />,
-    shortcut: '6',
+    shortcut: '7',
     description: 'Simulador de cenários'
   },
   {
     id: 'recomendacoes',
     label: 'Recomendações',
     icon: <Lightbulb className="w-4 h-4" />,
-    shortcut: '7',
+    shortcut: '8',
     description: 'Recomendações IA'
   },
   {
     id: 'aposentadoria',
     label: 'Aposentadoria',
     icon: <PiggyBank className="w-4 h-4" />,
-    shortcut: '8',
+    shortcut: '9',
     description: 'Planejamento de aposentadoria'
+  },
+
+  {
+    id: 'metas-financeiras',
+    label: 'Metas Financeiras',
+    icon: <Target className="w-4 h-4" />,
+    description: 'Gerenciar metas financeiras'
+  },
+  {
+    id: 'imposto-renda',
+    label: 'Imposto de Renda',
+    icon: <FileText className="w-4 h-4" />,
+    description: 'Calculadora de IR'
   }
 ];
 
@@ -186,9 +210,15 @@ export function NavigationEnhanced({ activeTab, onTabChange, onTabHover, classNa
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey) {
         const key = e.key;
-        if (key >= '1' && key <= '8') {
+        if (key >= '1' && key <= '9') {
           e.preventDefault();
           const tabIndex = parseInt(key) - 1;
+          if (tabs[tabIndex]) {
+            onTabChange(tabs[tabIndex].id);
+          }
+        } else if (key === '0') {
+          e.preventDefault();
+          const tabIndex = 9; // Para o atalho '0' que corresponde ao índice 9
           if (tabs[tabIndex]) {
             onTabChange(tabs[tabIndex].id);
           }
@@ -211,7 +241,7 @@ export function NavigationEnhanced({ activeTab, onTabChange, onTabHover, classNa
     // Preload baseado na aba
     switch (tabId) {
       case 'simulacao':
-        hoverPreload.preloadSimulacao();
+        hoverPreload.preloadSimulador();
         break;
       case 'comparador':
         hoverPreload.preloadComparador();
@@ -226,7 +256,7 @@ export function NavigationEnhanced({ activeTab, onTabChange, onTabHover, classNa
         hoverPreload.preloadPerformance();
         break;
       case 'cenarios':
-        hoverPreload.preloadCenarios();
+        hoverPreload.preloadRelatorios();
         break;
       case 'recomendacoes':
         hoverPreload.preloadRecomendacoes();
@@ -365,20 +395,7 @@ export function NavigationEnhanced({ activeTab, onTabChange, onTabHover, classNa
                     )}
                     
                     {/* Indicador de Aba Ativa */}
-                    {activeTab === tab.id && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className={`
-                          absolute bg-blue-500/10 dark:bg-blue-400/10 rounded-md
-                          ${isMobile 
-                            ? 'bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-blue-500 dark:bg-blue-400'
-                            : 'inset-0'
-                          }
-                        `}
-                        initial={false}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                      />
-                    )}
+
                   </motion.button>
                 ))}
               </nav>
