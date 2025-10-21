@@ -161,8 +161,9 @@ export function useScreenReader() {
     }
 
     return () => {
-      if (liveRegionRef.current) {
+      if (liveRegionRef.current && document.body.contains(liveRegionRef.current)) {
         document.body.removeChild(liveRegionRef.current);
+        liveRegionRef.current = null;
       }
     };
   }, []);
@@ -223,8 +224,9 @@ export function useSkipLinks() {
     }
 
     return () => {
-      if (skipLinksRef.current) {
+      if (skipLinksRef.current && document.body.contains(skipLinksRef.current)) {
         document.body.removeChild(skipLinksRef.current);
+        skipLinksRef.current = null;
       }
     };
   }, []);

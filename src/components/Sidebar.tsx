@@ -197,6 +197,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           icon: <Calculator className="w-4 h-4" />,
           onClick: () => navigate('/'),
           shortcut: 'Ctrl+C'
+        },
+        {
+          id: 'educacao-financeira',
+          title: 'Educação Financeira',
+          description: 'Aprenda sobre finanças pessoais',
+          icon: <GraduationCap className="w-4 h-4" />,
+          onClick: () => navigate('/educacao-financeira'),
+          shortcut: 'Ctrl+E'
         }
       ]
     },

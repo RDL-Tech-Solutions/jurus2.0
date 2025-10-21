@@ -203,32 +203,38 @@ const SistemaEducacao: React.FC = () => {
 
       {/* Navegação por abas */}
       <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="flex space-x-8">
-          {[
-            { id: 'home', label: 'Início', icon: BookOpen },
-            { id: 'plano', label: 'Plano de Estudos', icon: Target },
-            { id: 'progresso', label: 'Progresso', icon: TrendingUp },
-            { id: 'glossario', label: 'Glossário', icon: BookOpen },
-            { id: 'dicas', label: 'Dicas', icon: Lightbulb },
-            { id: 'tutoriais', label: 'Tutoriais', icon: Play },
-            { id: 'artigos', label: 'Artigos', icon: BookOpen },
-            { id: 'conquistas', label: 'Conquistas', icon: Trophy },
-            { id: 'perfil', label: 'Perfil', icon: User }
-          ].map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setAbaSelecionada(id)}
-              className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                abaSelecionada === id
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
+        <div className="relative">
+          {/* Gradiente de fade para indicar scroll no mobile */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-900 to-transparent z-10 pointer-events-none sm:hidden"></div>
+          
+          <nav className="flex space-x-2 sm:space-x-8 overflow-x-auto scrollbar-hide pb-0">
+            {[
+              { id: 'home', label: 'Início', icon: BookOpen },
+              { id: 'plano', label: 'Plano de Estudos', icon: Target },
+              { id: 'progresso', label: 'Progresso', icon: TrendingUp },
+              { id: 'glossario', label: 'Glossário', icon: BookOpen },
+              { id: 'dicas', label: 'Dicas', icon: Lightbulb },
+              { id: 'tutoriais', label: 'Tutoriais', icon: Play },
+              { id: 'artigos', label: 'Artigos', icon: BookOpen },
+              { id: 'conquistas', label: 'Conquistas', icon: Trophy },
+              { id: 'perfil', label: 'Perfil', icon: User }
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setAbaSelecionada(id)}
+                className={`flex items-center space-x-1 sm:space-x-2 py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 ${
+                  abaSelecionada === id
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden xs:inline sm:inline">{label}</span>
+                <span className="xs:hidden sm:hidden text-xs">{label.split(' ')[0]}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
 
       {/* Conteúdo das abas */}
