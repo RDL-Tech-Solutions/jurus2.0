@@ -120,30 +120,30 @@ export const ContextualHelp: React.FC<ContextualHelpProps> = ({
       icon: <Star className="w-5 h-5" />,
       articles: [
         {
-          id: 'dashboard-guide',
-          title: 'Guia do Dashboard Executivo',
-          content: 'Entenda como usar o dashboard executivo para acompanhar seus investimentos.',
+          id: 'simulation-guide',
+          title: 'Guia de Simulação de Juros',
+          content: 'Aprenda como usar a calculadora de juros compostos para planejar seus investimentos.',
           category: 'guide',
-          difficulty: 'intermediate',
-          estimatedTime: 15,
-          tags: ['dashboard', 'análise', 'métricas'],
+          difficulty: 'beginner',
+          estimatedTime: 10,
+          tags: ['simulação', 'juros', 'planejamento'],
+          lastUpdated: new Date(),
+          author: 'Equipe Jurus',
+          rating: 4.8,
+          views: 1200
+        },
+        {
+          id: 'education-guide',
+          title: 'Sistema de Educação Financeira',
+          content: 'Explore os recursos educacionais para melhorar seus conhecimentos financeiros.',
+          category: 'feature',
+          difficulty: 'beginner',
+          estimatedTime: 8,
+          tags: ['educação', 'aprendizado', 'finanças'],
           lastUpdated: new Date(),
           author: 'Equipe Jurus',
           rating: 4.7,
-          views: 750
-        },
-        {
-          id: 'ai-recommendations',
-          title: 'Recomendações de IA',
-          content: 'Como usar as recomendações inteligentes para otimizar seus investimentos.',
-          category: 'feature',
-          difficulty: 'intermediate',
-          estimatedTime: 12,
-          tags: ['ia', 'recomendações', 'otimização'],
-          lastUpdated: new Date(),
-          author: 'Equipe Jurus',
-          rating: 4.6,
-          views: 650
+          views: 850
         }
       ]
     },

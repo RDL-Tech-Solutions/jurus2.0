@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRecomendacoesIA } from './useRecomendacoesIA';
 import { useSimuladorCenarios } from './useSimuladorCenarios';
 import { useTemas } from './useTemas';
 import { usePerformanceOptimization } from './usePerformanceOptimization';
@@ -85,7 +84,6 @@ export const useIntegracaoAvancada = () => {
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random()}`);
 
   // Hooks das funcionalidades
-  const { recomendacoes, perfil: perfilUsuario } = useRecomendacoesIA();
   const simulador = useSimuladorCenarios({
     valorInicial: 10000,
     valorMensal: 1000,
@@ -99,23 +97,21 @@ export const useIntegracaoAvancada = () => {
 
   // Dashboard consolidado
   const dashboardData = useMemo<DashboardData>(() => {
-    const portfolioValue = perfilUsuario?.patrimonioLiquido || 0;
+    const portfolioValue = 0; // Valor padrão
     const monthlyReturn = 0; // Valor padrão
-    const riskScore = perfilUsuario?.toleranciaRisco || 5;
+    const riskScore = 5; // Valor padrão
 
     return {
       portfolioValue,
       monthlyReturn,
       riskScore,
-      recommendations: recomendacoes,
+      recommendations: [],
       scenarios: simulador.resultados,
       alerts: [], // Alertas não estão disponíveis no hook atual
       performance: performance.metrics,
       themePreferences: temas.temaAtivo
     };
   }, [
-    recomendacoes,
-    perfilUsuario,
     simulador.resultados,
     performance.metrics,
     temas.temaAtivo
@@ -131,12 +127,12 @@ export const useIntegracaoAvancada = () => {
       const newInsights: PredictiveInsight[] = [];
 
       // Análise de tendência de mercado baseada em dados históricos
-      if (perfilUsuario && simulador.resultados.length > 0) {
+      if (simulador.resultados.length > 0) {
         const tendenciaMercado = simulador.resultados.reduce((acc, resultado) => {
           return acc + resultado.valorFinal;
         }, 0) / simulador.resultados.length;
 
-        const portfolioAtual = perfilUsuario.patrimonioLiquido;
+        const portfolioAtual = 10000; // Valor padrão
         const variacao = ((tendenciaMercado - portfolioAtual) / portfolioAtual) * 100;
 
         if (Math.abs(variacao) > 5) {
@@ -159,27 +155,25 @@ export const useIntegracaoAvancada = () => {
       }
 
       // Análise de risco do portfólio
-      if (perfilUsuario) {
-        const riskScoreNum = perfilUsuario.toleranciaRisco;
-        const portfolioRisk = 5; // Valor padrão já que analiseRisco não está disponível
-        
-        if (Math.abs(riskScoreNum - portfolioRisk) > 20) {
-          newInsights.push({
-            id: `portfolio-risk-${Date.now()}`,
-            type: 'portfolio_risk',
-            confidence: 85,
-            timeframe: '1w',
-            prediction: riskScoreNum > portfolioRisk
-              ? 'Portfólio muito conservador para seu perfil'
-              : 'Portfólio muito arriscado para seu perfil',
-            impact: 'medium',
-            recommendedAction: riskScoreNum > portfolioRisk
-              ? 'Considere adicionar ativos de maior rentabilidade'
-              : 'Considere reduzir exposição a ativos voláteis',
-            data: { riskScore: riskScoreNum, portfolioRisk },
-            createdAt: Date.now()
-          });
-        }
+      const riskScoreNum = 5; // Valor padrão
+      const portfolioRisk = 5; // Valor padrão já que analiseRisco não está disponível
+      
+      if (Math.abs(riskScoreNum - portfolioRisk) > 20) {
+        newInsights.push({
+          id: `portfolio-risk-${Date.now()}`,
+          type: 'portfolio_risk',
+          confidence: 85,
+          timeframe: '1w',
+          prediction: riskScoreNum > portfolioRisk
+            ? 'Portfólio muito conservador para seu perfil'
+            : 'Portfólio muito arriscado para seu perfil',
+          impact: 'medium',
+          recommendedAction: riskScoreNum > portfolioRisk
+            ? 'Considere adicionar ativos de maior rentabilidade'
+            : 'Considere reduzir exposição a ativos voláteis',
+          data: { riskScore: riskScoreNum, portfolioRisk },
+          createdAt: Date.now()
+        });
       }
 
       // Análise de oportunidades baseada em performance
@@ -203,7 +197,7 @@ export const useIntegracaoAvancada = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [config.enablePredictiveAnalysis, perfilUsuario, simulador.resultados, performance.metrics]);
+  }, [config.enablePredictiveAnalysis, simulador.resultados, performance.metrics]);
 
   // Notificações inteligentes
   const gerarNotificacaoInteligente = useCallback((

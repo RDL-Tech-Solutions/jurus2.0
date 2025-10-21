@@ -155,3 +155,6 @@ export interface InflacaoPreset {
   taxaAnual: number;
   descricao: string;
 }
+
+// Exportar tipos de educação financeira
+export * from './educacaoFinanceira';

@@ -4,24 +4,6 @@ import { Layout } from '../components/Layout';
 import { Home } from '../components/Home';
 
 // Lazy loading dos componentes com preload hints
-const Dashboard = lazy(() => 
-  import('../components/Dashboard').then(module => {
-    // Preload related components
-    import('../components/DashboardExecutivo');
-    return module;
-  })
-);
-
-const DashboardExecutivo = lazy(() => 
-  import('../components/DashboardExecutivo').then(module => {
-    // Preload advanced dashboard
-    import('../components/DashboardExecutivoAvancado');
-    return module;
-  })
-);
-
-const DashboardExecutivoAvancado = lazy(() => import('../components/DashboardExecutivoAvancado'));
-const RecomendacoesIA = lazy(() => import('../components/RecomendacoesIA'));
 const SistemaTemasAvancado = lazy(() => import('../components/SistemaTemasAvancado'));
 const SistemaEducacao = lazy(() => import('../components/SistemaEducacao'));
 const CentroNotificacoes = lazy(() => import('../components/CentroNotificacoes'));
@@ -30,6 +12,8 @@ const ConfiguracoesAcessibilidade = lazy(() =>
     default: module.ConfiguracoesAcessibilidade 
   }))
 );
+
+const EducacaoFinanceira = lazy(() => import('../pages/EducacaoFinanceira'));
 
 // Componente de Loading aprimorado com acessibilidade
 function PageLoader() {
@@ -161,45 +145,6 @@ export function AppRouter() {
           {/* Rota principal - sem lazy loading para melhor UX inicial */}
           <Route index element={<Home />} />
           
-          {/* Dashboard Básico */}
-          <Route 
-            path="dashboard" 
-            element={
-              <LazyRoute>
-                <Dashboard />
-              </LazyRoute>
-            } 
-          />
-          
-          {/* Dashboard Executivo */}
-          <Route 
-            path="dashboard-executivo" 
-            element={
-              <LazyRoute>
-                <DashboardExecutivo />
-              </LazyRoute>
-            } 
-          />
-          
-          {/* Dashboard Executivo Avançado */}
-          <Route 
-            path="dashboard-executivo-avancado" 
-            element={
-              <LazyRoute>
-                <DashboardExecutivoAvancado />
-              </LazyRoute>
-            } 
-          />
-          
-          {/* Recomendações de IA */}
-          <Route 
-            path="recomendacoes-ia" 
-            element={
-              <LazyRoute>
-                <RecomendacoesIA />
-              </LazyRoute>
-            } 
-          />
           
           {/* Sistema de Temas */}
           <Route 
@@ -243,11 +188,19 @@ export function AppRouter() {
             } 
           />
           
+          {/* Educação Financeira */}
+          <Route 
+            path="educacao-financeira" 
+            element={
+              <LazyRoute>
+                <EducacaoFinanceira />
+              </LazyRoute>
+            } 
+          />
+          
           {/* Redirecionamentos para compatibilidade */}
           <Route path="home" element={<Navigate to="/" replace />} />
           <Route path="calculadora" element={<Navigate to="/" replace />} />
-          <Route path="dashboard-avancado" element={<Navigate to="/dashboard-executivo-avancado" replace />} />
-          <Route path="recomendacoes" element={<Navigate to="/recomendacoes-ia" replace />} />
           <Route path="temas" element={<Navigate to="/sistema-temas" replace />} />
           <Route path="educacao" element={<Navigate to="/sistema-educacao" replace />} />
           

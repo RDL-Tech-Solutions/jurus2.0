@@ -92,15 +92,7 @@ const defaultTours: OnboardingConfig[] = [
         position: 'bottom',
         highlight: true
       },
-      {
-        id: 'ai-recommendations',
-        title: 'Recomendações IA',
-        description: 'Nossa IA analisa seu perfil e sugere investimentos personalizados.',
-        target: '[data-testid="tab-recomendacoes"]',
-        position: 'bottom',
-        highlight: true,
-        tip: 'As recomendações são atualizadas diariamente com base no mercado.'
-      },
+
       {
         id: 'simulator',
         title: 'Simulador de Cenários',

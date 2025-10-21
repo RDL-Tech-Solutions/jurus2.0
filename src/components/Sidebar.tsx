@@ -2,20 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
   Settings,
-  Shield,
   HelpCircle,
-  BookOpen,
-  BarChart3,
-  FileText,
-  TrendingUp,
   X,
   ChevronRight,
   Accessibility,
   Database,
   GraduationCap,
   LifeBuoy,
-  Brain,
-  Gamepad2,
   Palette,
   Calculator,
   Home
@@ -207,46 +200,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         }
       ]
     },
-    {
-      title: 'Dashboards',
-      icon: <BarChart3 className="w-5 h-5" />,
-      items: [
-        {
-          id: 'dashboard',
-          title: 'Dashboard Básico',
-          description: 'Visão geral dos dados',
-          icon: <BarChart3 className="w-4 h-4" />,
-          onClick: () => navigate('/dashboard'),
-        },
-        {
-          id: 'dashboard-executivo',
-          title: 'Dashboard Executivo',
-          description: 'Dashboard para executivos',
-          icon: <TrendingUp className="w-4 h-4" />,
-          onClick: () => navigate('/dashboard-executivo'),
-        },
-        {
-          id: 'dashboard-avancado',
-          title: 'Dashboard Avançado',
-          description: 'Dashboard executivo avançado',
-          icon: <BarChart3 className="w-4 h-4" />,
-          onClick: () => navigate('/dashboard-executivo-avancado'),
-        }
-      ]
-    },
-    {
-      title: 'Ferramentas',
-      icon: <FileText className="w-5 h-5" />,
-      items: [
-        {
-          id: 'recomendacoes-ia',
-          title: 'Recomendações IA',
-          description: 'Recomendações inteligentes',
-          icon: <Brain className="w-4 h-4" />,
-          onClick: () => navigate('/recomendacoes-ia'),
-        }
-      ]
-    },
+
     {
       title: 'Sistema',
       icon: <Settings className="w-5 h-5" />,
@@ -309,21 +263,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick: onHelpClick,
           shortcut: 'F1'
         },
-        {
-          id: 'tutorial',
-          title: 'Tutorial',
-          description: 'Guia passo a passo',
-          icon: <GraduationCap className="w-4 h-4" />,
-          onClick: onTutorialClick,
-          shortcut: 'Ctrl+?'
-        },
-        {
-          id: 'documentation',
-          title: 'Documentação',
-          description: 'Manual completo do usuário',
-          icon: <BookOpen className="w-4 h-4" />,
-          onClick: () => window.open('/docs', '_blank'),
-        }
+
       ]
     }
   ];

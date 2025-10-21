@@ -73,31 +73,17 @@ const tabs: Tab[] = [
     description: 'Simulações favoritas'
   },
   {
-    id: 'performance',
-    label: 'Performance',
-    icon: <TrendingUp className="w-4 h-4" />,
-    shortcut: '6',
-    description: 'Dashboard de performance'
-  },
-  {
     id: 'cenarios',
     label: 'Cenários',
     icon: <Lightbulb className="w-4 h-4" />,
-    shortcut: '7',
+    shortcut: '6',
     description: 'Simulador de cenários'
-  },
-  {
-    id: 'recomendacoes',
-    label: 'Recomendações',
-    icon: <Lightbulb className="w-4 h-4" />,
-    shortcut: '8',
-    description: 'Recomendações IA'
   },
   {
     id: 'aposentadoria',
     label: 'Aposentadoria',
     icon: <PiggyBank className="w-4 h-4" />,
-    shortcut: '9',
+    shortcut: '7',
     description: 'Planejamento de aposentadoria'
   },
 
@@ -252,14 +238,8 @@ export function NavigationEnhanced({ activeTab, onTabChange, onTabHover, classNa
       case 'meta':
         hoverPreload.preloadMetas();
         break;
-      case 'performance':
-        hoverPreload.preloadPerformance();
-        break;
       case 'cenarios':
         hoverPreload.preloadRelatorios();
-        break;
-      case 'recomendacoes':
-        hoverPreload.preloadRecomendacoes();
         break;
       case 'aposentadoria':
         hoverPreload.preloadSimulador();

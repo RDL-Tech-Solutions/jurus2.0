@@ -3,23 +3,12 @@ import { useEffect } from 'react';
 // Hook para preload de componentes críticos
 export const usePreloadComponents = () => {
   useEffect(() => {
-    // Preload dos componentes mais utilizados após 2 segundos
-    const preloadTimer = setTimeout(() => {
-      // Dashboard Executivo (mais usado)
-      import('../components/DashboardExecutivo').catch(() => {});
-      
-      // Dashboard Executivo Avançado
-      import('../components/DashboardExecutivoAvancado').catch(() => {});
-    }, 2000);
-
     // Preload de componentes secundários após 5 segundos
     const secondaryPreloadTimer = setTimeout(() => {
-      import('../components/RecomendacoesIA').catch(() => {});
       import('../components/SistemaEducacao').catch(() => {});
     }, 5000);
 
     return () => {
-      clearTimeout(preloadTimer);
       clearTimeout(secondaryPreloadTimer);
     };
   }, []);
@@ -34,9 +23,6 @@ export const useHoverPreload = () => {
   };
 
   return {
-    preloadDashboard: preloadComponent('../components/DashboardExecutivo'),
-    preloadDashboardAvancado: preloadComponent('../components/DashboardExecutivoAvancado'),
-    preloadRecomendacoes: preloadComponent('../components/RecomendacoesIA'),
     preloadTemas: preloadComponent('../components/SistemaTemas'),
     preloadEducacao: preloadComponent('../components/SistemaEducacao'),
     preloadNotificacoes: preloadComponent('../components/CentroNotificacoes'),
@@ -45,7 +31,6 @@ export const useHoverPreload = () => {
     preloadComparador: preloadComponent('../components/ComparadorInvestimentos'),
     preloadHistorico: preloadComponent('../components/HistoricoSimulacoes'),
     preloadMetas: preloadComponent('../components/MetasFinanceiras'),
-    preloadPerformance: preloadComponent('../components/DashboardPerformance'),
     preloadRelatorios: preloadComponent('../components/TemplatesRelatorio'),
     preloadSimulador: preloadComponent('../components/FormularioEntrada'),
   };
@@ -73,15 +58,6 @@ export const useIntelligentPreload = () => {
     setTimeout(() => {
       sortedPaths.forEach(path => {
         switch (path) {
-          case '/dashboard':
-            import('../components/DashboardExecutivo').catch(() => {});
-            break;
-          case '/dashboard-avancado':
-            import('../components/DashboardExecutivoAvancado').catch(() => {});
-            break;
-          case '/recomendacoes':
-            import('../components/RecomendacoesIA').catch(() => {});
-            break;
           case '/educacao':
             import('../components/SistemaEducacao').catch(() => {});
             break;

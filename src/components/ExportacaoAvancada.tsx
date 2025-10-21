@@ -259,9 +259,7 @@ const ExportacaoAvancada: React.FC<ExportacaoAvancadaProps> = ({
                     <div className="space-y-3">
                       <h4 className="font-medium text-gray-700 dark:text-gray-300">Análises Avançadas</h4>
                       {[
-                        { key: 'incluirPerformance', label: 'Dashboard de Performance' },
-                        { key: 'incluirCenarios', label: 'Simulação de Cenários' },
-                        { key: 'incluirRecomendacoes', label: 'Recomendações IA' }
+                        { key: 'incluirCenarios', label: 'Simulação de Cenários' }
                       ].map(({ key, label }) => (
                         <label key={key} className="flex items-center space-x-2">
                           <input

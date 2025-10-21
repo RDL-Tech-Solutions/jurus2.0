@@ -28,7 +28,7 @@ import { ResultadoSimulacao } from './ResultadoSimulacao';
 import { GraficoInterativo } from './GraficoInterativo';
 import { PeriodoVisualizacao } from './PeriodoSwitch';
 import { NavigationEnhanced } from './NavigationEnhanced';
-import { SkeletonLoader, SkeletonCard, SkeletonChart, SkeletonDashboard } from './SkeletonLoader';
+import { SkeletonLoader, SkeletonCard, SkeletonChart } from './SkeletonLoader';
 import { LazyWrapper, LazyViewport } from './LazyWrapper';
 import { LoadingOverlay } from './LoadingProgress';
 import { AnimatedContainer, StaggeredContainer, AnimatedItem } from './AnimatedContainer';
@@ -43,22 +43,17 @@ import {
   LazyComparadorInvestimentos,
   LazyHistoricoSimulacoes,
   LazyCalculadoraMeta,
-  LazyDashboardMelhorado,
-  LazyRecomendacoesIA,
   LazyCalculadoraAposentadoria,
   LazyRetiradasProgramadas,
   LazySimulacaoInflacao,
   LazyAnaliseCenarios,
   LazyAnaliseAvancada,
-  LazyDashboardAvancado,
-  LazyDashboardPerformance,
   LazyExportacaoAvancada
 } from './LazyComponents';
 import MetasFinanceiras from './MetasFinanceiras';
 import TimelineMetas from './TimelineMetas';
 import CalculadoraImpostoRenda from './CalculadoraImpostoRenda';
 import SistemaFavoritos from './SistemaFavoritos';
-import DashboardInsights from './DashboardInsights';
 // SimuladorCenarios replaced with LazyAnaliseCenarios
 import SistemaEducacao from './SistemaEducacao';
 import Sidebar from './Sidebar';
@@ -168,8 +163,6 @@ export const Home = memo(() => {
     showInflacao: false,
     showCenarios: false,
     showAnaliseAvancada: false,
-    showDashboard: false,
-    showPerformance: false,
     showExportacao: false,
     showModalidadesBancos: false
   });
@@ -401,11 +394,8 @@ export const Home = memo(() => {
     { id: 'metas-financeiras', label: 'Metas Financeiras', icon: Target },
     { id: 'imposto-renda', label: 'Imposto de Renda', icon: Calculator },
     { id: 'favoritos', label: 'Favoritos', icon: Heart },
-    { id: 'insights', label: 'Insights', icon: Brain },
-    { id: 'performance', label: 'Performance', icon: TrendingUp },
     { id: 'cenarios', label: 'Cenários', icon: Settings },
     { id: 'educacao', label: 'Educação', icon: GraduationCap },
-    { id: 'recomendacoes', label: 'IA Recomendações', icon: Zap },
     { id: 'aposentadoria', label: 'Aposentadoria', icon: Target }
   ];
 
@@ -433,13 +423,10 @@ export const Home = memo(() => {
         hoverPreload.preloadRelatorios();
         break;
       case 'historico':
-        hoverPreload.preloadDashboard();
+        hoverPreload.preloadHistorico();
         break;
       case 'meta':
-        hoverPreload.preloadSimulador();
-        break;
-      case 'recomendacoes':
-        hoverPreload.preloadRecomendacoes();
+        hoverPreload.preloadMetas();
         break;
       case 'cenarios':
         hoverPreload.preloadSimulador();
@@ -739,10 +726,10 @@ export const Home = memo(() => {
       shortcut: 'Ctrl+3'
     },
     {
-      title: 'Recomendações IA',
-      description: 'Receba sugestões personalizadas',
-      icon: Zap,
-      action: () => setActiveTab('recomendacoes'),
+      title: 'Educação Financeira',
+      description: 'Aprenda sobre investimentos e finanças',
+      icon: GraduationCap,
+      action: () => setActiveTab('educacao'),
       color: 'from-orange-500 to-orange-600',
       shortcut: 'Ctrl+4'
     }
@@ -764,11 +751,8 @@ export const Home = memo(() => {
       'metas-financeiras': { label: 'Metas Financeiras', icon: <Target className="w-4 h-4" /> },
       'imposto-renda': { label: 'Imposto de Renda', icon: <Calculator className="w-4 h-4" /> },
       favoritos: { label: 'Favoritos', icon: <Heart className="w-4 h-4" /> },
-      insights: { label: 'Insights', icon: <Brain className="w-4 h-4" /> },
-      performance: { label: 'Performance', icon: <TrendingUp className="w-4 h-4" /> },
       cenarios: { label: 'Cenários', icon: <Settings className="w-4 h-4" /> },
       educacao: { label: 'Educação Financeira', icon: <GraduationCap className="w-4 h-4" /> },
-      recomendacoes: { label: 'IA Recomendações', icon: <Zap className="w-4 h-4" /> },
       aposentadoria: { label: 'Aposentadoria', icon: <Target className="w-4 h-4" /> }
     };
 
@@ -1170,33 +1154,12 @@ export const Home = memo(() => {
             </AnimatedContainer>
           )}
 
-          {activeTab === 'performance' && (
-            <AnimatedContainer variant="fadeIn" delay={0.1}>
-              <LazyWrapper fallback={<SkeletonChart />}>
-                <LazyDashboardMelhorado 
-                  valorAtual={resultado?.saldoFinal || 0}
-                  valorInicial={simulacao.valorInicial}
-                />
-              </LazyWrapper>
-            </AnimatedContainer>
-          )}
-
           {activeTab === 'cenarios' && (
             <AnimatedContainer variant="slideUp" delay={0.1}>
               <LazyWrapper fallback={<SkeletonCard />}>
                 <LazyAnaliseCenarios
                   simulacao={simulacao}
                   onClose={() => setActiveTab('simulacao')}
-                />
-              </LazyWrapper>
-            </AnimatedContainer>
-          )}
-
-          {activeTab === 'recomendacoes' && (
-            <AnimatedContainer variant="fadeIn" delay={0.1}>
-              <LazyWrapper fallback={<SkeletonCard />}>
-                <LazyRecomendacoesIA 
-                  simulacao={simulacao}
                 />
               </LazyWrapper>
             </AnimatedContainer>
@@ -1228,11 +1191,7 @@ export const Home = memo(() => {
             </AnimatedContainer>
           )}
 
-          {activeTab === 'insights' && (
-            <AnimatedContainer variant="slideUp" delay={0.1}>
-              <DashboardInsights />
-            </AnimatedContainer>
-          )}
+
 
           {activeTab === 'educacao' && (
             <AnimatedContainer variant="slideUp" delay={0.1}>
@@ -1279,24 +1238,7 @@ export const Home = memo(() => {
         </LazyWrapper>
       )}
 
-      {modals.showDashboard && calculado && (
-        <LazyWrapper fallback={<SkeletonChart />}>
-          <LazyDashboardAvancado
-            simulacao={simulacao}
-            resultado={resultado}
-            onClose={() => toggleModal('showDashboard')}
-          />
-        </LazyWrapper>
-      )}
 
-      {modals.showPerformance && calculado && (
-        <LazyWrapper fallback={<SkeletonChart />}>
-          <LazyDashboardPerformance
-            valorAtual={resultado?.valorFinal || 0}
-            valorInicial={simulacao.valorInicial}
-          />
-        </LazyWrapper>
-      )}
 
       {modals.showExportacao && calculado && (
         <LazyWrapper fallback={<SkeletonCard />}>
