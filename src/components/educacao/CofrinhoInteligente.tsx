@@ -765,41 +765,41 @@ export const CofrinhoInteligente: React.FC = () => {
 
       {/* Interface com Abas */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1">
-          <TabsTrigger value="simulator" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-            <PiggyBank className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">Simulador</span>
-            <span className="sm:hidden">Sim.</span>
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-0.5 sm:gap-1 overflow-x-auto">
+          <TabsTrigger value="simulator" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Simulador</span>
+            <span className="xs:hidden">Sim</span>
           </TabsTrigger>
-          <TabsTrigger value="comparison" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-            <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">Comparação</span>
-            <span className="sm:hidden">Comp.</span>
+          <TabsTrigger value="comparison" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Comparação</span>
+            <span className="xs:hidden">Comp</span>
           </TabsTrigger>
-          <TabsTrigger value="scenarios" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-            <TrendingUp className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">Cenários</span>
-            <span className="sm:hidden">Cen.</span>
+          <TabsTrigger value="scenarios" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Cenários</span>
+            <span className="xs:hidden">Cen</span>
           </TabsTrigger>
-          <TabsTrigger value="goals" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-            <Target className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">Metas</span>
-            <span className="sm:hidden">Met.</span>
+          <TabsTrigger value="goals" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Target className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Metas</span>
+            <span className="xs:hidden">Met</span>
           </TabsTrigger>
-          <TabsTrigger value="achievements" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-            <Trophy className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">Conquistas</span>
-            <span className="sm:hidden">Conq.</span>
+          <TabsTrigger value="achievements" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Trophy className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Conquistas</span>
+            <span className="xs:hidden">Conq</span>
           </TabsTrigger>
-          <TabsTrigger value="retirement" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-            <Shield className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">Aposentadoria</span>
-            <span className="sm:hidden">Apos.</span>
+          <TabsTrigger value="retirement" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Shield className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Aposentadoria</span>
+            <span className="xs:hidden">Apos</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="simulator" className="space-y-6">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
+        <TabsContent value="simulator" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Configuração */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -1145,21 +1145,24 @@ export const CofrinhoInteligente: React.FC = () => {
               <CardTitle>Evolução do Investimento</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 md:h-80 lg:h-96">
+              <div className="h-48 sm:h-64 md:h-80 lg:h-96 w-full overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={calculations.chartData}>
+                  <AreaChart data={calculations.chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="mes" 
                       label={{ value: 'Mês', position: 'insideBottom', offset: -5 }}
-                      fontSize={12}
-                      className="text-xs md:text-sm"
+                      fontSize={10}
+                      className="text-xs"
+                      tick={{ fontSize: 10 }}
                     />
                     <YAxis 
                       tickFormatter={(value) => formatCurrency(value)}
                       label={{ value: 'Valor', angle: -90, position: 'insideLeft' }}
-                      fontSize={12}
-                      className="text-xs md:text-sm"
+                      fontSize={10}
+                      className="text-xs"
+                      tick={{ fontSize: 10 }}
+                      width={60}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Area 

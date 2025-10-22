@@ -414,39 +414,46 @@ export const SolucoesDividas: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7">
-          <TabsTrigger value="calculator" className="flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
-            Calculadora
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-0.5 sm:gap-1 overflow-x-auto">
+          <TabsTrigger value="calculator" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Calculator className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Calculadora</span>
+            <span className="xs:hidden">Calc</span>
           </TabsTrigger>
-          <TabsTrigger value="strategies" className="flex items-center gap-2">
-            <Target className="h-4 w-4" />
-            Estratégias
+          <TabsTrigger value="strategies" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Target className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Estratégias</span>
+            <span className="xs:hidden">Estr</span>
           </TabsTrigger>
-          <TabsTrigger value="renegotiation" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Renegociação
+          <TabsTrigger value="renegotiation" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Renegociação</span>
+            <span className="xs:hidden">Reneg</span>
           </TabsTrigger>
-          <TabsTrigger value="tracking" className="flex items-center gap-2">
-            <TrendingDown className="h-4 w-4" />
-            Acompanhamento
+          <TabsTrigger value="tracking" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Acompanhamento</span>
+            <span className="xs:hidden">Acomp</span>
           </TabsTrigger>
-          <TabsTrigger value="analysis" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Análise
+          <TabsTrigger value="analysis" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Análise</span>
+            <span className="xs:hidden">Anál</span>
           </TabsTrigger>
-          <TabsTrigger value="motivation" className="flex items-center gap-2">
-            <Trophy className="h-4 w-4" />
-            Motivação
+          <TabsTrigger value="motivation" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Trophy className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Motivação</span>
+            <span className="xs:hidden">Motiv</span>
           </TabsTrigger>
-          <TabsTrigger value="tools" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Ferramentas
+          <TabsTrigger value="tools" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Settings className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Ferramentas</span>
+            <span className="xs:hidden">Ferr</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="calculator" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <TabsContent value="calculator" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -1059,16 +1066,19 @@ export const SolucoesDividas: React.FC = () => {
             </CardHeader>
             <CardContent>
               {debtProgress.length > 0 ? (
-                <div className="h-64">
+                <div className="h-48 sm:h-64 md:h-80 w-full overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={debtProgress.map((p, index) => ({
-                      mes: `Mês ${index + 1}`,
-                      valorRestante: p.valorAtual,
-                      valorPago: p.valorInicial - p.valorAtual
-                    }))}>
+                    <AreaChart 
+                      data={debtProgress.map((p, index) => ({
+                        mes: `Mês ${index + 1}`,
+                        valorRestante: p.valorAtual,
+                        valorPago: p.valorInicial - p.valorAtual
+                      }))}
+                      margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="mes" />
-                      <YAxis />
+                      <XAxis dataKey="mes" fontSize={10} tick={{ fontSize: 10 }} />
+                      <YAxis fontSize={10} tick={{ fontSize: 10 }} width={60} />
                       <Tooltip formatter={(value: any) => formatCurrency(value)} />
                       <Area 
                         type="monotone" 

@@ -673,27 +673,46 @@ export const Simulador5030: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-7">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="categories">Categorias</TabsTrigger>
-          <TabsTrigger value="scenarios">Cenários</TabsTrigger>
-          <TabsTrigger value="tips">Dicas</TabsTrigger>
-          <TabsTrigger value="goals">
-            <Trophy className="h-4 w-4 mr-1" />
-            Metas
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-0.5 sm:gap-1 overflow-x-auto">
+          <TabsTrigger value="overview" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Eye className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Visão Geral</span>
+            <span className="xs:hidden">Visão</span>
           </TabsTrigger>
-          <TabsTrigger value="trends">
-            <TrendingUp className="h-4 w-4 mr-1" />
-            Tendências
+          <TabsTrigger value="categories" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <PieChartIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Categorias</span>
+            <span className="xs:hidden">Cat</span>
           </TabsTrigger>
-          <TabsTrigger value="achievements">
-            <Award className="h-4 w-4 mr-1" />
-            Conquistas
+          <TabsTrigger value="scenarios" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Activity className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Cenários</span>
+            <span className="xs:hidden">Cen</span>
+          </TabsTrigger>
+          <TabsTrigger value="tips" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Lightbulb className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Dicas</span>
+            <span className="xs:hidden">Dic</span>
+          </TabsTrigger>
+          <TabsTrigger value="goals" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Trophy className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Metas</span>
+            <span className="xs:hidden">Met</span>
+          </TabsTrigger>
+          <TabsTrigger value="trends" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Tendências</span>
+            <span className="xs:hidden">Tend</span>
+          </TabsTrigger>
+          <TabsTrigger value="achievements" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 min-w-0 min-h-[44px] touch-manipulation">
+            <Award className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden xs:inline truncate">Conquistas</span>
+            <span className="xs:hidden">Conq</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Configuração */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -939,7 +958,7 @@ export const Simulador5030: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   {parseFloat(rendaMensal.replace(',', '.')) > 0 ? (
-                    <div className="h-80">
+                    <div className="h-48 sm:h-64 md:h-80 w-full overflow-hidden">
                       <ResponsiveContainer width="100%" height="100%">
                         {chartType === 'pie' ? (
                           <PieChart>
@@ -965,10 +984,10 @@ export const Simulador5030: React.FC = () => {
                             <Legend />
                           </PieChart>
                         ) : chartType === 'bar' ? (
-                          <BarChart data={barChartData}>
+                          <BarChart data={barChartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
+                            <XAxis dataKey="name" fontSize={10} tick={{ fontSize: 10 }} />
+                            <YAxis fontSize={10} tick={{ fontSize: 10 }} width={50} />
                             <Tooltip content={<CustomTooltip />} />
                             <Bar dataKey="value" fill="#8884d8" animationDuration={800}>
                               {barChartData.map((entry, index) => (
@@ -1185,17 +1204,20 @@ export const Simulador5030: React.FC = () => {
               {comparisonScenarios.length > 0 ? (
                 <div className="space-y-6">
                   {/* Gráfico Comparativo */}
-                  <div className="h-80">
+                  <div className="h-48 sm:h-64 md:h-80 w-full overflow-hidden">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={comparisonScenarios.map(scenario => ({
-                        name: scenario.name,
-                        necessidades: scenario.renda * scenario.config.necessidades / 100,
-                        desejos: scenario.renda * scenario.config.desejos / 100,
-                        poupanca: scenario.renda * scenario.config.poupanca / 100
-                      }))}>
+                      <BarChart 
+                        data={comparisonScenarios.map(scenario => ({
+                          name: scenario.name,
+                          necessidades: scenario.renda * scenario.config.necessidades / 100,
+                          desejos: scenario.renda * scenario.config.desejos / 100,
+                          poupanca: scenario.renda * scenario.config.poupanca / 100
+                        }))}
+                        margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
+                        <XAxis dataKey="name" fontSize={10} tick={{ fontSize: 10 }} />
+                        <YAxis fontSize={10} tick={{ fontSize: 10 }} width={50} />
                         <Tooltip formatter={(value: number) => formatCurrency(value)} />
                         <Legend />
                         <Bar dataKey="necessidades" stackId="a" fill={COLORS.necessidades} name="Necessidades" />
@@ -1723,12 +1745,12 @@ export const Simulador5030: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64">
+                <div className="h-48 sm:h-64 md:h-80 w-full overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trendData}>
+                    <LineChart data={trendData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
+                      <XAxis dataKey="month" fontSize={10} tick={{ fontSize: 10 }} />
+                      <YAxis fontSize={10} tick={{ fontSize: 10 }} width={50} />
                       <Tooltip />
                       <Line 
                         type="monotone" 
