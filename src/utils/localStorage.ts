@@ -1,6 +1,6 @@
 import { SimulacaoInput, ComparacaoInvestimento, Theme, CalculadoraAposentadoriaInput, ResultadoAposentadoria } from '../types';
 import { localStorageKeys } from '../constants';
-import { HistoricoItem } from '../hooks/useHistorico';
+import { HistoricoItem } from '../types/historico';
 import { MetaInput, ResultadoMeta } from '../hooks/useCalculadoraMeta';
 
 // Função genérica para localStorage

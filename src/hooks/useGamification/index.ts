@@ -1,1 +1,1 @@
-export { default as useGamification } from '../useGamification';
+export { useGamification } from '../useGamification';
