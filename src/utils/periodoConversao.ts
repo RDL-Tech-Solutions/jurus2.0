@@ -1,5 +1,6 @@
 import { ResultadoSimulacao, ResultadoMensal } from '../types';
-import { PeriodoVisualizacao } from '../components/PeriodoSwitch';
+// Define PeriodoVisualizacao locally since the component doesn't exist
+type PeriodoVisualizacao = 'mensal' | 'anual';
 
 /**
  * Converte valores de resultado de simulação entre períodos mensal e anual

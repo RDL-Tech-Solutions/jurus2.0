@@ -204,14 +204,17 @@ async function networkFirst(request) {
 async function staleWhileRevalidate(request) {
   const cachedResponse = await caches.match(request);
   
-  const fetchPromise = fetch(request).then((networkResponse) => {
+  const fetchPromise = fetch(request).then(async (networkResponse) => {
     if (networkResponse.ok) {
-      const cache = caches.open(DYNAMIC_CACHE);
-      cache.then(c => c.put(request, networkResponse.clone()));
+      // Clone ANTES de usar a resposta
+      const responseToCache = networkResponse.clone();
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, responseToCache);
     }
     return networkResponse;
   }).catch(() => {
     // Falha silenciosa na atualização em background
+    return null;
   });
   
   return cachedResponse || fetchPromise;

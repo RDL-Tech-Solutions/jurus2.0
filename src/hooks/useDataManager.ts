@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { APP_VERSION } from '../constants/version';
 
 export interface UserProfile {
   id: string;
@@ -49,8 +50,6 @@ const STORAGE_KEYS = {
   DATA_PREFIX: 'jurus_data_',
   SETTINGS: 'jurus_settings'
 };
-
-const APP_VERSION = '1.0.0';
 
 export const useDataManager = () => {
   const [state, setState] = useState<DataManagerState>({

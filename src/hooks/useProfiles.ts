@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { APP_VERSION } from '../constants/version';
 
 export interface UserProfile {
   id: string;
@@ -338,7 +339,7 @@ export const useProfiles = () => {
     const exportData = {
       profile,
       exportedAt: new Date().toISOString(),
-      version: '4.0.0',
+      version: APP_VERSION,
     };
     
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { 

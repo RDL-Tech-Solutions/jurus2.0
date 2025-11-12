@@ -1,183 +1,104 @@
-import React, { memo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { TrendingDown, BarChart3, PieChart, Download, Activity, Brain } from 'lucide-react';
-import { ResultadoSimulacao as ResultadoType, SimulacaoInput } from '../types';
-import { CardsResumo } from './CardsResumo';
-import { TabelaDetalhada } from './TabelaDetalhada';
-import { AnimatedContainer } from './AnimatedContainer';
-import { AnimatedButton } from './AnimatedButton';
-import { StaggeredContainer } from './AnimatedContainer';
-import { PeriodoSwitch, PeriodoVisualizacao } from './PeriodoSwitch';
-import { PeriodoConversor } from '../utils/periodoConversao';
+import { TrendingUp, DollarSign, Calendar, Percent } from 'lucide-react';
+import { useSimulacao } from '../store/useAppStore';
+import { formatarMoeda } from '../utils/calculos';
+import { GraficoEvolucao } from './GraficoEvolucao';
+import { TabelaEvolucao } from './TabelaEvolucao';
+import { EstatisticasAvancadas } from './EstatisticasAvancadas';
+import { CalculadoraIR } from './CalculadoraIR';
 
-interface ResultadoSimulacaoProps {
-  resultado: ResultadoType;
-  simulacao?: SimulacaoInput;
-  periodoVisualizacao?: PeriodoVisualizacao;
-  onPeriodoChange?: (periodo: PeriodoVisualizacao) => void;
-  onMostrarInflacao?: () => void;
-  onMostrarCenarios?: () => void;
-  onMostrarAnaliseAvancada?: () => void;
-  onMostrarDashboard?: () => void;
-  onMostrarExportacao?: () => void;
-  onMostrarPerformance?: () => void;
-}
+export function ResultadoSimulacao() {
+  const { resultado } = useSimulacao();
 
-const ResultadoSimulacao = memo(function ResultadoSimulacao({ 
-  resultado, 
-  simulacao, 
-  periodoVisualizacao: periodoVisualizacaoExterno,
-  onPeriodoChange,
-  onMostrarInflacao,
-  onMostrarCenarios,
-  onMostrarAnaliseAvancada,
-  onMostrarDashboard,
-  onMostrarExportacao,
-  onMostrarPerformance 
-}: ResultadoSimulacaoProps) {
-  
-  // Usar estado externo se disponível, senão usar estado interno
-  const [periodoVisualizacaoInterno, setPeriodoVisualizacaoInterno] = useState<PeriodoVisualizacao>('anual');
-  const periodoVisualizacao = periodoVisualizacaoExterno ?? periodoVisualizacaoInterno;
-  
-  const handlePeriodoChange = (novoPeriodo: PeriodoVisualizacao) => {
-    if (onPeriodoChange) {
-      onPeriodoChange(novoPeriodo);
-    } else {
-      setPeriodoVisualizacaoInterno(novoPeriodo);
-    }
-  };
-  
-  // Converte o resultado baseado no período selecionado
-  const resultadoConvertido = PeriodoConversor.converterResultadoSimulacao(resultado, periodoVisualizacao);
-  const evolucaoConvertida = PeriodoConversor.converterEvolucaoMensal(resultado.evolucaoMensal, periodoVisualizacao);
-  
+  if (!resultado) {
+    return (
+      <div className="card-mobile text-center py-12">
+        <TrendingUp className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+          Nenhuma simulação realizada
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-500">
+          Preencha o formulário acima e clique em "Calcular" para ver os resultados
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <AnimatedContainer
-      variant="slideUp"
-      delay={0.2}
-      className="space-y-6"
-    >
-      <StaggeredContainer>
-        {/* Switch de Período */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="flex justify-center mb-6"
-        >
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Visualizar por:
-              </span>
-              <PeriodoSwitch
-                valor={periodoVisualizacao}
-                onChange={handlePeriodoChange}
-                size="md"
-              />
+    <div className="space-y-6">
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Valor Final */}
+        <div className="card-mobile">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/30">
+              <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Valor Final</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {formatarMoeda(resultado.valorFinal)}
+              </p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <CardsResumo resultado={resultadoConvertido} periodoVisualizacao={periodoVisualizacao} />
-        </motion.div>
-        
-        {/* Botões de Análises Avançadas */}
-        {(onMostrarInflacao || onMostrarCenarios || onMostrarAnaliseAvancada || onMostrarDashboard || onMostrarExportacao || onMostrarPerformance) && simulacao && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex justify-center gap-4 flex-wrap">
-              {onMostrarInflacao && (
-                <AnimatedButton
-                  onClick={onMostrarInflacao}
-                  variant="secondary"
-                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-                >
-                  <TrendingDown className="w-5 h-5" />
-                  Simular com Inflação
-                </AnimatedButton>
-              )}
-              
-              {onMostrarCenarios && (
-                <AnimatedButton
-                  onClick={onMostrarCenarios}
-                  variant="secondary"
-                  className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white"
-                >
-                  <BarChart3 className="w-5 h-5" />
-                  Análise de Cenários
-                </AnimatedButton>
-              )}
+        {/* Total Investido */}
+        <div className="card-mobile">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+              <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Total Investido</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {formatarMoeda(resultado.totalInvestido)}
+              </p>
+            </div>
+          </div>
+        </div>
 
-              {onMostrarAnaliseAvancada && (
-                <AnimatedButton
-                  onClick={onMostrarAnaliseAvancada}
-                  variant="secondary"
-                  className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white"
-                >
-                  <Brain className="w-5 h-5" />
-                  Análise Avançada
-                </AnimatedButton>
-              )}
-              
-              {onMostrarDashboard && (
-                <AnimatedButton
-                  onClick={onMostrarDashboard}
-                  variant="secondary"
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
-                >
-                  <PieChart className="w-5 h-5" />
-                  Dashboard Avançado
-                </AnimatedButton>
-              )}
+        {/* Total de Juros */}
+        <div className="card-mobile">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+              <Percent className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Total de Juros</p>
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                {formatarMoeda(resultado.totalJuros)}
+              </p>
+            </div>
+          </div>
+        </div>
 
-              {onMostrarPerformance && (
-                <AnimatedButton
-                  onClick={onMostrarPerformance}
-                  variant="secondary"
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
-                >
-                  <Activity className="w-5 h-5" />
-                  Performance
-                </AnimatedButton>
-              )}
-              
-              {onMostrarExportacao && (
-                <AnimatedButton
-                  onClick={onMostrarExportacao}
-                  variant="secondary"
-                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                >
-                  <Download className="w-5 h-5" />
-                  Exportar Relatório
-                </AnimatedButton>
-              )}
-             </div>
-           </motion.div>
-         )}
-         
-         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ delay: 0.3 }}
-         >
-           <TabelaDetalhada 
-             dados={evolucaoConvertida} 
-             periodoVisualizacao={periodoVisualizacao}
-           />
-         </motion.div>
-       </StaggeredContainer>
-     </AnimatedContainer>
-   );
-});
+        {/* Rentabilidade */}
+        <div className="card-mobile">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+              <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Rentabilidade</p>
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {((resultado.totalJuros / resultado.totalInvestido) * 100).toFixed(2)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-export { ResultadoSimulacao };
+      {/* Gráfico de Evolução */}
+      <GraficoEvolucao />
+
+      {/* Tabela de Evolução */}
+      <TabelaEvolucao />
+
+      {/* Estatísticas Avançadas */}
+      <EstatisticasAvancadas />
+
+      {/* Calculadora de IR */}
+      <CalculadoraIR />
+    </div>
+  );
+}

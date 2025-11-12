@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { ToastType } from '../components/Toast';
+// Define ToastType locally since the component doesn't exist
+type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 interface Toast {
   id: string;

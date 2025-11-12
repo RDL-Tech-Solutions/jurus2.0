@@ -5,7 +5,7 @@ export const usePreloadComponents = () => {
   useEffect(() => {
     // Preload de componentes secundários após 5 segundos
     const secondaryPreloadTimer = setTimeout(() => {
-      import('../components/SistemaEducacao').catch(() => {});
+      // import('../components/SistemaEducacao').catch(() => {});
     }, 5000);
 
     return () => {
@@ -24,7 +24,7 @@ export const useHoverPreload = () => {
 
   return {
     preloadTemas: preloadComponent('../components/SistemaTemas'),
-    preloadEducacao: preloadComponent('../components/SistemaEducacao'),
+    // preloadEducacao: preloadComponent('../components/SistemaEducacao'),
     preloadNotificacoes: preloadComponent('../components/CentroNotificacoes'),
     preloadAcessibilidade: preloadComponent('../components/ConfiguracoesAcessibilidade'),
     // Missing functions that were causing errors
@@ -59,7 +59,7 @@ export const useIntelligentPreload = () => {
       sortedPaths.forEach(path => {
         switch (path) {
           case '/educacao':
-            import('../components/SistemaEducacao').catch(() => {});
+            // import('../components/SistemaEducacao').catch(() => {});
             break;
         }
       });

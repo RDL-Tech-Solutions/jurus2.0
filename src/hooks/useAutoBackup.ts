@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { APP_VERSION } from '../constants/version';
 
 interface BackupData {
   id: string;
@@ -122,7 +123,7 @@ export const useAutoBackup = () => {
       const backup: BackupData = {
         id: `backup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         timestamp: new Date().toISOString(),
-        version: '4.0.0',
+        version: APP_VERSION,
         data,
         size: new Blob([dataString]).size,
         type,
@@ -295,7 +296,7 @@ export const useAutoBackup = () => {
         const backup: BackupData = {
           id: `backup_${Date.now()}_exit`,
           timestamp: new Date().toISOString(),
-          version: '4.0.0',
+          version: APP_VERSION,
           data,
           size: new Blob([JSON.stringify(data)]).size,
           type: 'auto',
