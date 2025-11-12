@@ -152,7 +152,6 @@ export function FormularioEntrada() {
           onChange={(e) => handleChange('taxaType', e.target.value)}
           className="input-mobile"
         >
-          <option value="banco">Banco/Corretora</option>
           <option value="banco_digital">Banco Digital</option>
           <option value="cdi">CDI Personalizado</option>
           <option value="personalizada">Taxa Personalizada</option>
